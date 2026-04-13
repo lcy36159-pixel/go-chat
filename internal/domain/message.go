@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type Message struct {
-	ID        uint      `gorm:"primaryKey"`
+	ID        uint `gorm:"primaryKey"`
 	SenderID  string
 	TargetID  string
 	ChatType  string

@@ -16,6 +16,6 @@ func main() {
 	r := gin.Default()
 
 	r.GET("/ws", handler.WebSocketHandler)
-
+	r.GET("/messages", handler.GetMessagesHandler)
 	r.Run(":8080")
 }

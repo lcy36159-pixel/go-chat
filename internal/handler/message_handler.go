@@ -9,16 +9,31 @@ import (
 )
 
 func GetMessagesHandler(c *gin.Context) {
-	user1 := c.Query("user1")
-	user2 := c.Query("user2")
+	chatIDStr := c.Query("chat_id")
 	lastIDStr := c.Query("last_id")
 
-	var lastID uint64 = 0
-	if lastIDStr != "" {
-		lastID, _ = strconv.ParseUint(lastIDStr, 10, 64)
+	// 解析 chat_id
+	chatID, err := strconv.ParseUint(chatIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat_id"})
+		return
 	}
 
-	msgs, _ := repository.GetMessages(user1, user2, uint(lastID))
+	// 解析 last_id（pagination）
+	var lastID uint64 = 0
+	if lastIDStr != "" {
+		lastID, err = strconv.ParseUint(lastIDStr, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid last_id"})
+			return
+		}
+	}
+
+	msgs, err := repository.GetMessagesByChatID(uint(chatID), uint(lastID), 20)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch messages"})
+		return
+	}
 
 	c.JSON(http.StatusOK, msgs)
 }

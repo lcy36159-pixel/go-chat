@@ -1,27 +1,15 @@
 package ws
 
-import "github.com/gorilla/websocket"
+var clients = make(map[uint]*Client)
 
-type Client struct {
-	UserID string
-	Conn   *websocket.Conn
+// 註冊 client
+func Register(client *Client) {
+	clients[client.UserID] = client
 }
 
-var Clients = make(map[string]*Client)
-
-func Register(c *Client) {
-	Clients[c.UserID] = c
-}
-
-func Broadcast(msg []byte) {
-	for _, c := range Clients {
-		c.Conn.WriteMessage(websocket.TextMessage, msg)
-	}
-}
-
-// ✅ 新增：發送給指定 user
-func SendToUser(userID string, msg []byte) {
-	if client, ok := Clients[userID]; ok {
-		client.Conn.WriteMessage(websocket.TextMessage, msg)
+// 傳送訊息給指定 user
+func SendToUser(userID uint, data []byte) {
+	if client, ok := clients[userID]; ok {
+		client.Conn.WriteMessage(1, data)
 	}
 }

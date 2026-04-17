@@ -13,29 +13,70 @@ type CreateGroupChatRequest struct {
 	UserIDs []uint `json:"user_ids"`
 }
 
+// 建立群組聊天室
 func CreateGroupChatHandler(c *gin.Context) {
 	var req CreateGroupChatRequest
 
+	// ✅ 解析 request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
-	// 假設 user_id 從 query 拿（之後可改 JWT）
+	// ✅ 驗證 name
+	if req.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
+		return
+	}
+
+	// ✅ 取得目前使用者
 	userIDStr := c.Query("user_id")
 	userIDUint64, err := strconv.ParseUint(userIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id"})
 		return
 	}
+	currentUserID := uint(userIDUint64)
 
-	chatID, err := service.CreateGroupChat(uint(userIDUint64), req.Name, req.UserIDs)
+	// ✅ 去重 + 自動加入自己
+	userMap := make(map[uint]bool)
+	userMap[currentUserID] = true
+
+	for _, uid := range req.UserIDs {
+		userMap[uid] = true
+	}
+
+	var finalUserIDs []uint
+	for uid := range userMap {
+		finalUserIDs = append(finalUserIDs, uid)
+	}
+
+	// ✅ 呼叫 service
+	chatID, err := service.CreateGroupChat(currentUserID, req.Name, finalUserIDs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create chat"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	// ✅ 回傳結果
+	c.JSON(http.StatusCreated, gin.H{
 		"chat_id": chatID,
 	})
+}
+func GetChatsHandler(c *gin.Context) {
+	userIDStr := c.Query("user_id")
+
+	userIDUint64, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "invalid user_id"})
+		return
+	}
+
+	chats, err := service.GetUserChats(uint(userIDUint64))
+	if err != nil {
+		c.JSON(500, gin.H{"error": "failed to get chats"})
+		return
+	}
+
+	c.JSON(200, chats)
 }

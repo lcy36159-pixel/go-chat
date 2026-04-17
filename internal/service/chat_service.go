@@ -4,34 +4,29 @@ import (
 	"errors"
 	"go-chat/internal/domain"
 	"go-chat/internal/repository"
+	"go-chat/pkg/db"
 )
 
-// 處理訊息（核心入口）
-func HandleMessage(msg *domain.Message) error {
-	// 基本驗證
-	if msg.ChatID == 0 {
-		return errors.New("chat_id is required")
-	}
-	if msg.SenderID == nil {
-		return errors.New("sender_id is required")
-	}
-	if msg.Content == "" {
-		return errors.New("content is empty")
-	}
-
-	// 預設 type（避免漏傳）
-	if msg.Type == "" {
-		msg.Type = "text"
-	}
-
-	// 可以在這裡加更多邏輯（之後擴充）
-	// ex: 長度限制、過濾字詞、圖片處理...
-
-	return repository.SaveMessage(msg)
-}
-
-// 建立群組聊天室
+// 建立群組聊天室（完整安全版）
 func CreateGroupChat(creatorID uint, name string, userIDs []uint) (uint, error) {
+	// 基本驗證
+	if name == "" {
+		return 0, errors.New("name is required")
+	}
+
+	// 使用 transaction（關鍵）
+	tx := db.DB.Begin()
+	if tx.Error != nil {
+		return 0, tx.Error
+	}
+
+	// ❗任何錯誤都 rollback
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	// 1️⃣ 建立 chat
 	chat := domain.Chat{
 		Name:      name,
@@ -39,11 +34,12 @@ func CreateGroupChat(creatorID uint, name string, userIDs []uint) (uint, error) 
 		CreatedBy: creatorID,
 	}
 
-	if err := repository.CreateChat(&chat); err != nil {
+	if err := tx.Create(&chat).Error; err != nil {
+		tx.Rollback()
 		return 0, err
 	}
 
-	// 2️⃣ 加入成員（包含自己）
+	// 2️⃣ 整理 member（去重 + 一定包含自己）
 	memberMap := make(map[uint]bool)
 	memberMap[creatorID] = true
 
@@ -51,12 +47,26 @@ func CreateGroupChat(creatorID uint, name string, userIDs []uint) (uint, error) 
 		memberMap[id] = true
 	}
 
+	// 3️⃣ 寫入 chat_members
 	for id := range memberMap {
-		repository.AddChatMember(&domain.ChatMember{
+		member := domain.ChatMember{
 			ChatID: chat.ID,
 			UserID: id,
-		})
+		}
+
+		if err := tx.Create(&member).Error; err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
+
+	// 4️⃣ commit
+	if err := tx.Commit().Error; err != nil {
+		return 0, err
 	}
 
 	return chat.ID, nil
+}
+func GetUserChats(userID uint) ([]domain.ChatDTO, error) {
+	return repository.GetUserChats(userID)
 }

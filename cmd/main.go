@@ -22,5 +22,6 @@ func main() {
 	r.POST("/chats/group", handler.CreateGroupChatHandler)
 	r.GET("/ws", handler.WebSocketHandler)
 	r.GET("/messages", handler.GetMessagesHandler)
+	r.GET("/chats", handler.GetChatsHandler)
 	r.Run(":8080")
 }

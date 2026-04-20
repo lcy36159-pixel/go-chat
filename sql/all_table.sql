@@ -39,13 +39,27 @@ CREATE TABLE "public"."chats" (
   "name" varchar(100) COLLATE "pg_catalog"."default",
   "last_message_id" int4,
   "created_at" timestamp(6) DEFAULT CURRENT_TIMESTAMP,
-  "created_by" int4 NOT NULL
+  "created_by" int4 NOT NULL,
+  "search_key" varchar(30) COLLATE "pg_catalog"."default"
 )
 ;
 COMMENT ON COLUMN "public"."chats"."type" IS '聊天室類型：private 或 group';
 COMMENT ON COLUMN "public"."chats"."last_message_id" IS '快取最後一筆訊息 ID，加速聊天列表查詢';
 COMMENT ON COLUMN "public"."chats"."created_by" IS '建立者';
+COMMENT ON COLUMN "public"."chats"."search_key" IS '輔助搜尋用的key';
 COMMENT ON TABLE "public"."chats" IS '聊天室（支援私訊與群組）';
+
+-- ----------------------------
+-- Indexes structure for table chats
+-- ----------------------------
+CREATE UNIQUE INDEX "chats_private_key_idx" ON "public"."chats" USING btree (
+  "search_key" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table chats
+-- ----------------------------
+ALTER TABLE "public"."chats" ADD CONSTRAINT "chats_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
 -- Table structure for message_reads

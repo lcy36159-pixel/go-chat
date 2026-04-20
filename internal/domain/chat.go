@@ -8,6 +8,7 @@ type Chat struct {
 	Type      string
 	CreatedBy uint
 	CreatedAt time.Time
+	SearchKey string
 }
 
 type ChatMember struct {

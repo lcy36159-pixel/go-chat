@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"go-chat/internal/domain"
 	"go-chat/pkg/db"
 )
@@ -14,15 +15,59 @@ func CreateChat(chat *domain.Chat) error {
 func AddChatMember(member *domain.ChatMember) error {
 	return db.DB.Create(member).Error
 }
+
 func GetUserChats(userID uint) ([]domain.ChatDTO, error) {
 	var chats []domain.ChatDTO
-	err := db.DB.Table("chat_members").
-		Select("chats.id as chat_id, chats.name, messages.content as last_message, messages.created_at as updated_at").
-		Joins("left join chats on chats.id = chat_members.chat_id").
-		Joins("left join messages on messages.chat_id = chats.id").
-		Where("chat_members.user_id = ?", userID).
-		Group("chats.id").
-		Order("messages.created_at desc").
+
+	err := db.DB.
+		Table("chats").
+		Select(`
+			chats.id as chat_id,
+			CASE 
+				WHEN chats.type = 'private' THEN u.username
+				ELSE chats.name
+			END as name,
+			m.content as last_message,
+			m.created_at as updated_at
+		`).
+		Joins("JOIN chat_members cm ON cm.chat_id = chats.id").
+		Joins(`
+			LEFT JOIN chat_members cm2 
+			ON cm2.chat_id = chats.id AND cm2.user_id != ?
+		`, userID).
+		Joins(`
+			LEFT JOIN users u ON u.id = cm2.user_id
+		`).
+		Joins(`
+			LEFT JOIN messages m ON m.id = (
+				SELECT id FROM messages
+				WHERE messages.chat_id = chats.id
+				ORDER BY created_at DESC
+				LIMIT 1
+			)
+		`).
+		Where("cm.user_id = ?", userID).
+		Order("m.created_at DESC NULLS LAST").
 		Scan(&chats).Error
+
 	return chats, err
+}
+func FindPrivateChat(user1, user2 uint) (uint, error) {
+	key := GeneratePrivateKey(user1, user2)
+
+	var chatID uint
+	err := db.DB.
+		Table("chats").
+		Select("id").
+		Where("search_key = ?", key).
+		Limit(1).
+		Scan(&chatID).Error
+
+	return chatID, err
+}
+func GeneratePrivateKey(user1, user2 uint) string {
+	if user1 < user2 {
+		return fmt.Sprintf("%d_%d", user1, user2)
+	}
+	return fmt.Sprintf("%d_%d", user2, user1)
 }

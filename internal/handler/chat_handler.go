@@ -80,3 +80,30 @@ func GetChatsHandler(c *gin.Context) {
 
 	c.JSON(200, chats)
 }
+
+type CreatePrivateChatRequest struct {
+	TargetUserID uint `json:"target_user_id"`
+}
+
+func CreatePrivateChatHandler(c *gin.Context) {
+	var req CreatePrivateChatRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "invalid request"})
+		return
+	}
+
+	userIDStr := c.Query("user_id")
+	userIDUint64, _ := strconv.ParseUint(userIDStr, 10, 64)
+	userID := uint(userIDUint64)
+
+	chatID, err := service.CreatePrivateChat(userID, req.TargetUserID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"chat_id": chatID,
+	})
+}

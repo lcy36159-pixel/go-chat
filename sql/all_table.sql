@@ -59,17 +59,16 @@ COMMENT ON TABLE "public"."chats" IS '聊天室（支援私訊與群組）';
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."message_reads";
 CREATE TABLE "public"."message_reads" (
-  "id" int4 NOT NULL,
   "user_id" int4 NOT NULL,
-  "read_at" timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "chat_id" int4 NOT NULL,
-  "last_read_message_id" int4 NOT NULL
+  "last_read_message_id" int4 NOT NULL,
+  "read_at" timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
 ;
 COMMENT ON COLUMN "public"."message_reads"."user_id" IS '使用者ID';
-COMMENT ON COLUMN "public"."message_reads"."read_at" IS '已讀時間';
 COMMENT ON COLUMN "public"."message_reads"."chat_id" IS '聊天室ID';
 COMMENT ON COLUMN "public"."message_reads"."last_read_message_id" IS '最後閱讀訊息ID';
+COMMENT ON COLUMN "public"."message_reads"."read_at" IS '已讀時間';
 COMMENT ON TABLE "public"."message_reads" IS '訊息已讀紀錄（支援多使用者已讀）';
 
 -- ----------------------------
@@ -143,10 +142,6 @@ CREATE INDEX "idx_message_reads_user" ON "public"."message_reads" USING btree (
 CREATE INDEX "message_reads_chat_id_idx" ON "public"."message_reads" USING btree (
   "chat_id" "pg_catalog"."int4_ops" ASC NULLS LAST
 );
-CREATE UNIQUE INDEX "message_reads_user_id_chat_id_idx" ON "public"."message_reads" USING btree (
-  "user_id" "pg_catalog"."int4_ops" ASC NULLS LAST,
-  "chat_id" "pg_catalog"."int4_ops" ASC NULLS LAST
-);
 CREATE INDEX "message_reads_user_id_idx" ON "public"."message_reads" USING btree (
   "user_id" "pg_catalog"."int4_ops" ASC NULLS LAST
 );
@@ -154,7 +149,7 @@ CREATE INDEX "message_reads_user_id_idx" ON "public"."message_reads" USING btree
 -- ----------------------------
 -- Primary Key structure for table message_reads
 -- ----------------------------
-ALTER TABLE "public"."message_reads" ADD CONSTRAINT "message_reads_pkey" PRIMARY KEY ("id");
+ALTER TABLE "public"."message_reads" ADD CONSTRAINT "message_reads_pkey" PRIMARY KEY ("user_id", "chat_id");
 
 -- ----------------------------
 -- Indexes structure for table messages
@@ -189,8 +184,8 @@ ALTER TABLE "public"."chat_members" ADD CONSTRAINT "chat_members_user_id_fkey" F
 -- ----------------------------
 -- Foreign Keys structure for table message_reads
 -- ----------------------------
-ALTER TABLE "public"."message_reads" ADD CONSTRAINT "message_reads_message_id_fkey" FOREIGN KEY ("id") REFERENCES "public"."messages" ("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 ALTER TABLE "public"."message_reads" ADD CONSTRAINT "message_reads_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users" ("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "public"."message_reads" ADD CONSTRAINT "message_reads_chat_id_fkey" FOREIGN KEY ("chat_id") REFERENCES "public"."chats" ("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Keys structure for table messages

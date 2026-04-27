@@ -3,11 +3,10 @@ package domain
 import "time"
 
 // MessageRead tracks the last read message for a user in a chat.
-// It maps to the message_reads table (also referred to as chat_reads).
+// PRIMARY KEY is the composite (chat_id, user_id) — no surrogate id column.
 type MessageRead struct {
-	ID                uint      `gorm:"primaryKey"`
-	UserID            uint      `gorm:"not null;uniqueIndex:idx_user_chat"`
-	ChatID            uint      `gorm:"not null;uniqueIndex:idx_user_chat"`
+	UserID            uint      `gorm:"primaryKey;not null"`
+	ChatID            uint      `gorm:"primaryKey;not null"`
 	LastReadMessageID uint      `gorm:"not null"`
 	ReadAt            time.Time `gorm:"autoUpdateTime"`
 }

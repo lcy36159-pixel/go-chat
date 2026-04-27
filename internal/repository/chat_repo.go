@@ -40,7 +40,7 @@ func GetUserChats(userID uint) ([]domain.ChatDTO, error) {
 		Joins("JOIN chat_members cm ON cm.chat_id = chats.id").
 		Joins(`
 			LEFT JOIN chat_members cm2 
-			ON cm2.chat_id = chats.id AND cm2.user_id != ?
+			ON cm2.chat_id = chats.id AND cm2.user_id != ? AND chats.type = 'private'
 		`, userID).
 		Joins(`
 			LEFT JOIN users u ON u.id = cm2.user_id

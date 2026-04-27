@@ -97,9 +97,22 @@ func CreateGroupChat(creatorID uint, name string, userIDs []uint) (uint, error) 
 	return chat.ID, nil
 }
 
+// MarkMessagesRead records the last read message for a user in a chat,
+// updating their unread count cursor.
+func MarkMessagesRead(userID, chatID, lastReadMessageID uint) error {
+	if userID == 0 {
+		return errors.New("user_id is required")
+	}
+	if chatID == 0 {
+		return errors.New("chat_id is required")
+	}
+	if lastReadMessageID == 0 {
+		return errors.New("last_read_message_id is required")
+	}
+	return repository.UpsertMessageRead(userID, chatID, lastReadMessageID)
+}
+
 //
-// ========================
-// 📋 Chat 查詢
 // ========================
 //
 

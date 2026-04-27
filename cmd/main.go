@@ -21,6 +21,7 @@ func main() {
 	r := gin.Default()
 	r.POST("/chats/private", handler.CreatePrivateChatHandler)
 	r.POST("/chats/group", handler.CreateGroupChatHandler)
+	r.POST("/chats/:id/read", handler.MarkReadHandler)
 	r.GET("/ws", handler.WebSocketHandler)
 	r.GET("/messages", handler.GetMessagesHandler)
 	r.GET("/chats", handler.GetChatsHandler)

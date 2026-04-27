@@ -7,4 +7,5 @@ type ChatDTO struct {
 	Name        string
 	LastMessage string
 	UpdatedAt   time.Time
+	UnreadCount int
 }

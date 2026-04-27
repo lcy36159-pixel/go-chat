@@ -85,6 +85,37 @@ type CreatePrivateChatRequest struct {
 	TargetUserID uint `json:"target_user_id"`
 }
 
+func MarkReadHandler(c *gin.Context) {
+	chatIDStr := c.Param("id")
+	chatIDUint64, err := strconv.ParseUint(chatIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat_id"})
+		return
+	}
+
+	userIDStr := c.Query("user_id")
+	userIDUint64, err := strconv.ParseUint(userIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id"})
+		return
+	}
+
+	var req struct {
+		LastReadMessageID uint `json:"last_read_message_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || req.LastReadMessageID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "last_read_message_id is required"})
+		return
+	}
+
+	if err := service.MarkMessagesRead(uint(userIDUint64), uint(chatIDUint64), req.LastReadMessageID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to mark messages as read"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
 func CreatePrivateChatHandler(c *gin.Context) {
 	var req CreatePrivateChatRequest
 

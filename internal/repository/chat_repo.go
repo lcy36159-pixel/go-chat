@@ -28,7 +28,14 @@ func GetUserChats(userID uint) ([]domain.ChatDTO, error) {
 				ELSE chats.name
 			END as name,
 			m.content as last_message,
-			m.created_at as updated_at
+			m.created_at as updated_at,
+			(
+				SELECT COUNT(*)
+				FROM messages unread
+				WHERE unread.chat_id = chats.id
+				  AND unread.id > COALESCE(mr.last_read_message_id, 0)
+				  AND unread.deleted_at IS NULL
+			) as unread_count
 		`).
 		Joins("JOIN chat_members cm ON cm.chat_id = chats.id").
 		Joins(`
@@ -46,6 +53,9 @@ func GetUserChats(userID uint) ([]domain.ChatDTO, error) {
 				LIMIT 1
 			)
 		`).
+		Joins(`
+			LEFT JOIN message_reads mr ON mr.chat_id = chats.id AND mr.user_id = ?
+		`, userID).
 		Where("cm.user_id = ?", userID).
 		Order("m.created_at DESC NULLS LAST").
 		Scan(&chats).Error

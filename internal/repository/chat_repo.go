@@ -34,9 +34,10 @@ func GetUserChats(userID uint) ([]domain.ChatDTO, error) {
 				FROM messages unread
 				WHERE unread.chat_id = chats.id
 				  AND unread.id > COALESCE(mr.last_read_message_id, 0)
+				  AND unread.sender_id != ?
 				  AND unread.deleted_at IS NULL
 			) as unread_count
-		`).
+		`, userID).
 		Joins("JOIN chat_members cm ON cm.chat_id = chats.id").
 		Joins(`
 			LEFT JOIN chat_members cm2 

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"go-chat/internal/service"
 	"net/http"
 	"strconv"
@@ -109,6 +110,10 @@ func MarkReadHandler(c *gin.Context) {
 	}
 
 	if err := service.MarkMessagesRead(uint(userIDUint64), uint(chatIDUint64), req.LastReadMessageID); err != nil {
+		if errors.Is(err, service.ErrNotChatMember) || errors.Is(err, service.ErrInvalidMessageID) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to mark messages as read"})
 		return
 	}

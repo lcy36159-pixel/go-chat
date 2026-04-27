@@ -2,9 +2,16 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"go-chat/internal/domain"
 	"go-chat/internal/repository"
 	"go-chat/pkg/db"
+)
+
+// Sentinel errors for MarkMessagesRead authorization failures.
+var (
+	ErrNotChatMember   = errors.New("not a chat member")
+	ErrInvalidMessageID = errors.New("invalid message id")
 )
 
 //
@@ -109,6 +116,23 @@ func MarkMessagesRead(userID, chatID, lastReadMessageID uint) error {
 	if lastReadMessageID == 0 {
 		return errors.New("last_read_message_id is required")
 	}
+
+	isMember, err := repository.IsChatMember(userID, chatID)
+	if err != nil {
+		return fmt.Errorf("failed to verify chat membership: %w", err)
+	}
+	if !isMember {
+		return ErrNotChatMember
+	}
+
+	valid, err := repository.IsMessageInChat(lastReadMessageID, chatID)
+	if err != nil {
+		return fmt.Errorf("failed to verify message: %w", err)
+	}
+	if !valid {
+		return ErrInvalidMessageID
+	}
+
 	return repository.UpsertMessageRead(userID, chatID, lastReadMessageID)
 }
 

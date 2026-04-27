@@ -6,14 +6,14 @@ Base URL: `http://localhost:8080`
 
 ## 目錄
 
-| 方法 | 路徑 | 說明 |
-|------|------|------|
-| POST | `/chats/private` | 建立私人聊天室 |
-| POST | `/chats/group` | 建立群組聊天室 |
-| GET | `/chats` | 取得使用者聊天室列表 |
-| POST | `/chats/:id/read` | 標記已讀 |
-| GET | `/messages` | 取得聊天訊息（分頁） |
-| GET | `/ws` | WebSocket 即時通訊 |
+| 方法 | 路徑              | 說明                 |
+| ---- | ----------------- | -------------------- |
+| POST | `/chats/private`  | 建立私人聊天室       |
+| POST | `/chats/group`    | 建立群組聊天室       |
+| GET  | `/chats`          | 取得使用者聊天室列表 |
+| POST | `/chats/:id/read` | 標記已讀             |
+| GET  | `/messages`       | 取得聊天訊息（分頁） |
+| GET  | `/ws`             | WebSocket 即時通訊   |
 
 ---
 
@@ -25,15 +25,15 @@ Base URL: `http://localhost:8080`
 
 ### Query 參數
 
-| 名稱 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `user_id` | uint | ✅ | 發起者的使用者 ID |
+| 名稱      | 類型 | 必填 | 說明              |
+| --------- | ---- | ---- | ----------------- |
+| `user_id` | uint | ✅    | 發起者的使用者 ID |
 
 ### Request Body（JSON）
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `target_user_id` | uint | ✅ | 對方的使用者 ID |
+| 欄位             | 類型 | 必填 | 說明            |
+| ---------------- | ---- | ---- | --------------- |
+| `target_user_id` | uint | ✅    | 對方的使用者 ID |
 
 ```json
 {
@@ -53,9 +53,9 @@ Base URL: `http://localhost:8080`
 
 **錯誤**
 
-| HTTP 狀態 | 說明 |
-|-----------|------|
-| `400 Bad Request` | request body 格式錯誤 |
+| HTTP 狀態                   | 說明                             |
+| --------------------------- | -------------------------------- |
+| `400 Bad Request`           | request body 格式錯誤            |
 | `500 Internal Server Error` | 建立失敗（例：與自己建立聊天室） |
 
 ---
@@ -68,16 +68,16 @@ Base URL: `http://localhost:8080`
 
 ### Query 參數
 
-| 名稱 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `user_id` | uint | ✅ | 發起者的使用者 ID |
+| 名稱      | 類型 | 必填 | 說明              |
+| --------- | ---- | ---- | ----------------- |
+| `user_id` | uint | ✅    | 發起者的使用者 ID |
 
 ### Request Body（JSON）
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `name` | string | ✅ | 群組名稱 |
-| `user_ids` | []uint | ✅ | 要加入的使用者 ID 陣列（可重複，系統自動去重） |
+| 欄位       | 類型   | 必填 | 說明                                           |
+| ---------- | ------ | ---- | ---------------------------------------------- |
+| `name`     | string | ✅    | 群組名稱                                       |
+| `user_ids` | []uint | ✅    | 要加入的使用者 ID 陣列（可重複，系統自動去重） |
 
 ```json
 {
@@ -98,10 +98,10 @@ Base URL: `http://localhost:8080`
 
 **錯誤**
 
-| HTTP 狀態 | 說明 |
-|-----------|------|
-| `400 Bad Request` | `name` 為空、`user_id` 無效或 body 格式錯誤 |
-| `500 Internal Server Error` | 資料庫建立失敗 |
+| HTTP 狀態                   | 說明                                        |
+| --------------------------- | ------------------------------------------- |
+| `400 Bad Request`           | `name` 為空、`user_id` 無效或 body 格式錯誤 |
+| `500 Internal Server Error` | 資料庫建立失敗                              |
 
 ---
 
@@ -113,9 +113,9 @@ Base URL: `http://localhost:8080`
 
 ### Query 參數
 
-| 名稱 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `user_id` | uint | ✅ | 使用者 ID |
+| 名稱      | 類型 | 必填 | 說明      |
+| --------- | ---- | ---- | --------- |
+| `user_id` | uint | ✅    | 使用者 ID |
 
 ### Response
 
@@ -142,20 +142,20 @@ Base URL: `http://localhost:8080`
 
 **欄位說明**
 
-| 欄位 | 類型 | 說明 |
-|------|------|------|
-| `ChatID` | uint | 聊天室 ID |
-| `Name` | string | 私人聊天顯示對方名稱；群組顯示群組名稱 |
-| `LastMessage` | string | 最後一則訊息內容 |
-| `UpdatedAt` | string (ISO 8601) | 最後一則訊息時間 |
-| `UnreadCount` | int | 未讀訊息數（不含自己發出的訊息） |
+| 欄位          | 類型              | 說明                                   |
+| ------------- | ----------------- | -------------------------------------- |
+| `ChatID`      | uint              | 聊天室 ID                              |
+| `Name`        | string            | 私人聊天顯示對方名稱；群組顯示群組名稱 |
+| `LastMessage` | string            | 最後一則訊息內容                       |
+| `UpdatedAt`   | string (ISO 8601) | 最後一則訊息時間                       |
+| `UnreadCount` | int               | 未讀訊息數（不含自己發出的訊息）       |
 
 **錯誤**
 
-| HTTP 狀態 | 說明 |
-|-----------|------|
-| `400 Bad Request` | `user_id` 無效 |
-| `500 Internal Server Error` | 查詢失敗 |
+| HTTP 狀態                   | 說明           |
+| --------------------------- | -------------- |
+| `400 Bad Request`           | `user_id` 無效 |
+| `500 Internal Server Error` | 查詢失敗       |
 
 ---
 
@@ -167,21 +167,21 @@ Base URL: `http://localhost:8080`
 
 ### Path 參數
 
-| 名稱 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `id` | uint | ✅ | 聊天室 ID |
+| 名稱 | 類型 | 必填 | 說明      |
+| ---- | ---- | ---- | --------- |
+| `id` | uint | ✅    | 聊天室 ID |
 
 ### Query 參數
 
-| 名稱 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `user_id` | uint | ✅ | 使用者 ID |
+| 名稱      | 類型 | 必填 | 說明      |
+| --------- | ---- | ---- | --------- |
+| `user_id` | uint | ✅    | 使用者 ID |
 
 ### Request Body（JSON）
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `last_read_message_id` | uint | ✅ | 最後已讀的訊息 ID（必須屬於該聊天室） |
+| 欄位                   | 類型 | 必填 | 說明                                  |
+| ---------------------- | ---- | ---- | ------------------------------------- |
+| `last_read_message_id` | uint | ✅    | 最後已讀的訊息 ID（必須屬於該聊天室） |
 
 ```json
 {
@@ -201,11 +201,11 @@ Base URL: `http://localhost:8080`
 
 **錯誤**
 
-| HTTP 狀態 | 說明 |
-|-----------|------|
-| `400 Bad Request` | `id`/`user_id` 格式錯誤，或 `last_read_message_id` 缺少 |
-| `403 Forbidden` | 使用者不是該聊天室成員，或訊息不屬於該聊天室 |
-| `500 Internal Server Error` | 資料庫更新失敗 |
+| HTTP 狀態                   | 說明                                                    |
+| --------------------------- | ------------------------------------------------------- |
+| `400 Bad Request`           | `id`/`user_id` 格式錯誤，或 `last_read_message_id` 缺少 |
+| `403 Forbidden`             | 使用者不是該聊天室成員，或訊息不屬於該聊天室            |
+| `500 Internal Server Error` | 資料庫更新失敗                                          |
 
 ---
 
@@ -217,10 +217,10 @@ Base URL: `http://localhost:8080`
 
 ### Query 參數
 
-| 名稱 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `chat_id` | uint | ✅ | 聊天室 ID |
-| `last_id` | uint | ❌ | 上一頁最後一筆訊息的 ID（用於載入更早訊息），預設為 0（取最新） |
+| 名稱      | 類型 | 必填 | 說明                                                            |
+| --------- | ---- | ---- | --------------------------------------------------------------- |
+| `chat_id` | uint | ✅    | 聊天室 ID                                                       |
+| `last_id` | uint | ❌    | 上一頁最後一筆訊息的 ID（用於載入更早訊息），預設為 0（取最新） |
 
 ### Response
 
@@ -251,15 +251,15 @@ Base URL: `http://localhost:8080`
 
 **欄位說明**
 
-| 欄位 | 類型 | 說明 |
-|------|------|------|
-| `ID` | uint | 訊息 ID |
-| `ChatID` | uint | 所屬聊天室 ID |
-| `SenderID` | uint \| null | 發送者 ID；若訊息已被刪除設為 null |
-| `Type` | string | 訊息類型，目前固定為 `"text"` |
-| `Content` | string | 訊息內容 |
-| `CreatedAt` | string (ISO 8601) | 發送時間 |
-| `DeletedAt` | string \| null | 軟刪除時間（非 null 代表已收回） |
+| 欄位        | 類型              | 說明                               |
+| ----------- | ----------------- | ---------------------------------- |
+| `ID`        | uint              | 訊息 ID                            |
+| `ChatID`    | uint              | 所屬聊天室 ID                      |
+| `SenderID`  | uint \| null      | 發送者 ID；若訊息已被刪除設為 null |
+| `Type`      | string            | 訊息類型，目前固定為 `"text"`      |
+| `Content`   | string            | 訊息內容                           |
+| `CreatedAt` | string (ISO 8601) | 發送時間                           |
+| `DeletedAt` | string \| null    | 軟刪除時間（非 null 代表已收回）   |
 
 **分頁範例**
 
@@ -273,10 +273,10 @@ GET /messages?chat_id=10&last_id=36
 
 **錯誤**
 
-| HTTP 狀態 | 說明 |
-|-----------|------|
-| `400 Bad Request` | `chat_id` 或 `last_id` 格式錯誤 |
-| `500 Internal Server Error` | 查詢失敗 |
+| HTTP 狀態                   | 說明                            |
+| --------------------------- | ------------------------------- |
+| `400 Bad Request`           | `chat_id` 或 `last_id` 格式錯誤 |
+| `500 Internal Server Error` | 查詢失敗                        |
 
 ---
 
@@ -292,9 +292,9 @@ GET /messages?chat_id=10&last_id=36
 
 ### Query 參數
 
-| 名稱 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `user_id` | uint | ✅ | 連線使用者 ID |
+| 名稱      | 類型 | 必填 | 說明          |
+| --------- | ---- | ---- | ------------- |
+| `user_id` | uint | ✅    | 連線使用者 ID |
 
 **連線範例**
 
@@ -315,10 +315,10 @@ ws://localhost:8080/ws?user_id=1
 }
 ```
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `chat_id` | uint | ✅ | 目標聊天室 ID（必須是該使用者的成員） |
-| `content` | string | ✅ | 訊息文字內容 |
+| 欄位      | 類型   | 必填 | 說明                                  |
+| --------- | ------ | ---- | ------------------------------------- |
+| `chat_id` | uint   | ✅    | 目標聊天室 ID（必須是該使用者的成員） |
+| `content` | string | ✅    | 訊息文字內容                          |
 
 > ⚠️ 若使用者不是該 `chat_id` 的成員，訊息會被靜默丟棄（不斷線）。
 
@@ -340,15 +340,15 @@ ws://localhost:8080/ws?user_id=1
 }
 ```
 
-| 欄位 | 類型 | 說明 |
-|------|------|------|
-| `ID` | uint | 訊息 ID（已存入資料庫） |
-| `ChatID` | uint | 聊天室 ID |
-| `SenderID` | uint | 發送者 ID |
-| `Type` | string | 固定為 `"text"` |
-| `Content` | string | 訊息內容 |
-| `CreatedAt` | string (ISO 8601) | 發送時間 |
-| `DeletedAt` | null | 軟刪除欄位（新訊息為 null） |
+| 欄位        | 類型              | 說明                        |
+| ----------- | ----------------- | --------------------------- |
+| `ID`        | uint              | 訊息 ID（已存入資料庫）     |
+| `ChatID`    | uint              | 聊天室 ID                   |
+| `SenderID`  | uint              | 發送者 ID                   |
+| `Type`      | string            | 固定為 `"text"`             |
+| `Content`   | string            | 訊息內容                    |
+| `CreatedAt` | string (ISO 8601) | 發送時間                    |
+| `DeletedAt` | null              | 軟刪除欄位（新訊息為 null） |
 
 ---
 

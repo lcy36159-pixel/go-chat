@@ -12,7 +12,7 @@
  Target Server Version : 180003 (180003)
  File Encoding         : 65001
 
- Date: 17/04/2026 18:01:01
+ Date: 27/04/2026 21:37:34
 */
 
 
@@ -27,6 +27,9 @@ CREATE TABLE "public"."chat_members" (
   "joined_at" timestamp(6) DEFAULT CURRENT_TIMESTAMP
 )
 ;
+COMMENT ON COLUMN "public"."chat_members"."chat_id" IS '聊天室ID';
+COMMENT ON COLUMN "public"."chat_members"."user_id" IS '使用者ID';
+COMMENT ON COLUMN "public"."chat_members"."joined_at" IS '加入時間';
 COMMENT ON TABLE "public"."chat_members" IS '聊天室與使用者關聯（成員表）';
 
 -- ----------------------------
@@ -44,33 +47,29 @@ CREATE TABLE "public"."chats" (
 )
 ;
 COMMENT ON COLUMN "public"."chats"."type" IS '聊天室類型：private 或 group';
+COMMENT ON COLUMN "public"."chats"."name" IS '聊天室名稱';
 COMMENT ON COLUMN "public"."chats"."last_message_id" IS '快取最後一筆訊息 ID，加速聊天列表查詢';
+COMMENT ON COLUMN "public"."chats"."created_at" IS '建立時間';
 COMMENT ON COLUMN "public"."chats"."created_by" IS '建立者';
 COMMENT ON COLUMN "public"."chats"."search_key" IS '輔助搜尋用的key';
 COMMENT ON TABLE "public"."chats" IS '聊天室（支援私訊與群組）';
-
--- ----------------------------
--- Indexes structure for table chats
--- ----------------------------
-CREATE UNIQUE INDEX "chats_private_key_idx" ON "public"."chats" USING btree (
-  "search_key" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
-);
-
--- ----------------------------
--- Primary Key structure for table chats
--- ----------------------------
-ALTER TABLE "public"."chats" ADD CONSTRAINT "chats_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
 -- Table structure for message_reads
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."message_reads";
 CREATE TABLE "public"."message_reads" (
-  "message_id" int4 NOT NULL,
+  "id" int4 NOT NULL,
   "user_id" int4 NOT NULL,
-  "read_at" timestamp(6) DEFAULT CURRENT_TIMESTAMP
+  "read_at" timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "chat_id" int4 NOT NULL,
+  "last_read_message_id" int4 NOT NULL
 )
 ;
+COMMENT ON COLUMN "public"."message_reads"."user_id" IS '使用者ID';
+COMMENT ON COLUMN "public"."message_reads"."read_at" IS '已讀時間';
+COMMENT ON COLUMN "public"."message_reads"."chat_id" IS '聊天室ID';
+COMMENT ON COLUMN "public"."message_reads"."last_read_message_id" IS '最後閱讀訊息ID';
 COMMENT ON TABLE "public"."message_reads" IS '訊息已讀紀錄（支援多使用者已讀）';
 
 -- ----------------------------
@@ -107,6 +106,8 @@ CREATE TABLE "public"."users" (
 )
 ;
 COMMENT ON COLUMN "public"."users"."username" IS '使用者帳號（唯一）';
+COMMENT ON COLUMN "public"."users"."password_hash" IS '密碼';
+COMMENT ON COLUMN "public"."users"."created_at" IS '建立時間';
 COMMENT ON TABLE "public"."users" IS '使用者基本資料';
 
 -- ----------------------------
@@ -122,6 +123,13 @@ CREATE INDEX "idx_chat_members_user" ON "public"."chat_members" USING btree (
 ALTER TABLE "public"."chat_members" ADD CONSTRAINT "chat_members_pkey" PRIMARY KEY ("chat_id", "user_id");
 
 -- ----------------------------
+-- Indexes structure for table chats
+-- ----------------------------
+CREATE UNIQUE INDEX "chats_private_key_idx" ON "public"."chats" USING btree (
+  "search_key" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
 -- Primary Key structure for table chats
 -- ----------------------------
 ALTER TABLE "public"."chats" ADD CONSTRAINT "chats_pkey" PRIMARY KEY ("id");
@@ -130,13 +138,23 @@ ALTER TABLE "public"."chats" ADD CONSTRAINT "chats_pkey" PRIMARY KEY ("id");
 -- Indexes structure for table message_reads
 -- ----------------------------
 CREATE INDEX "idx_message_reads_user" ON "public"."message_reads" USING btree (
+  "last_read_message_id" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE INDEX "message_reads_chat_id_idx" ON "public"."message_reads" USING btree (
+  "chat_id" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE UNIQUE INDEX "message_reads_user_id_chat_id_idx" ON "public"."message_reads" USING btree (
+  "user_id" "pg_catalog"."int4_ops" ASC NULLS LAST,
+  "chat_id" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE INDEX "message_reads_user_id_idx" ON "public"."message_reads" USING btree (
   "user_id" "pg_catalog"."int4_ops" ASC NULLS LAST
 );
 
 -- ----------------------------
 -- Primary Key structure for table message_reads
 -- ----------------------------
-ALTER TABLE "public"."message_reads" ADD CONSTRAINT "message_reads_pkey" PRIMARY KEY ("message_id", "user_id");
+ALTER TABLE "public"."message_reads" ADD CONSTRAINT "message_reads_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
 -- Indexes structure for table messages
@@ -171,7 +189,7 @@ ALTER TABLE "public"."chat_members" ADD CONSTRAINT "chat_members_user_id_fkey" F
 -- ----------------------------
 -- Foreign Keys structure for table message_reads
 -- ----------------------------
-ALTER TABLE "public"."message_reads" ADD CONSTRAINT "message_reads_message_id_fkey" FOREIGN KEY ("message_id") REFERENCES "public"."messages" ("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "public"."message_reads" ADD CONSTRAINT "message_reads_message_id_fkey" FOREIGN KEY ("id") REFERENCES "public"."messages" ("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 ALTER TABLE "public"."message_reads" ADD CONSTRAINT "message_reads_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users" ("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
 -- ----------------------------

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"go-chat/internal/repository"
+	"go-chat/internal/service"
 	"net/http"
 	"strconv"
 
@@ -11,13 +12,23 @@ import (
 func GetMessagesHandler(c *gin.Context) {
 	chatIDStr := c.Query("chat_id")
 	lastIDStr := c.Query("last_id")
+	userIDStr := c.Query("user_id")
 
 	// 解析 chat_id
-	chatID, err := strconv.ParseUint(chatIDStr, 10, 64)
+	chatIDUint64, err := strconv.ParseUint(chatIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat_id"})
 		return
 	}
+	chatID := uint(chatIDUint64)
+
+	// 解析 user_id
+	userIDUint64, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id"})
+		return
+	}
+	userID := uint(userIDUint64)
 
 	// 解析 last_id（pagination）
 	var lastID uint64 = 0
@@ -29,10 +40,17 @@ func GetMessagesHandler(c *gin.Context) {
 		}
 	}
 
-	msgs, err := repository.GetMessagesByChatID(uint(chatID), uint(lastID), 20)
+	// 取得訊息
+	msgs, err := repository.GetMessagesByChatID(chatID, uint(lastID), 20)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch messages"})
 		return
+	}
+
+	// 自動標記已讀
+	if len(msgs) > 0 && lastID == 0 {
+		lastMsgID := msgs[0].ID
+		_ = service.MarkMessagesRead(userID, chatID, lastMsgID)
 	}
 
 	c.JSON(http.StatusOK, msgs)

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -35,4 +36,18 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set(UserIDContextKey, userID)
 		c.Next()
 	}
+}
+
+func UserIDFromContext(c *gin.Context) (uint, error) {
+	val, ok := c.Get(UserIDContextKey)
+	if !ok {
+		return 0, errors.New("missing authenticated user")
+	}
+
+	userID, ok := val.(uint)
+	if !ok || userID == 0 {
+		return 0, errors.New("invalid authenticated user")
+	}
+
+	return userID, nil
 }

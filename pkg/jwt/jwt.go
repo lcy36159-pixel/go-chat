@@ -17,6 +17,8 @@ var (
 	loadSecretOnce sync.Once
 	secretBytes    []byte
 	secretErr      error
+	loadTTLOnce    sync.Once
+	ttlDuration    time.Duration
 )
 
 type Claims struct {
@@ -87,15 +89,18 @@ func jwtSecret() ([]byte, error) {
 }
 
 func tokenTTL() time.Duration {
-	ttlHoursStr := os.Getenv("JWT_TTL_HOURS")
-	if ttlHoursStr == "" {
-		return defaultTokenTTLHours * time.Hour
-	}
+	loadTTLOnce.Do(func() {
+		ttlDuration = defaultTokenTTLHours * time.Hour
+		ttlHoursStr := os.Getenv("JWT_TTL_HOURS")
+		if ttlHoursStr == "" {
+			return
+		}
+		ttlHours, err := strconv.Atoi(ttlHoursStr)
+		if err != nil || ttlHours <= 0 {
+			return
+		}
+		ttlDuration = time.Duration(ttlHours) * time.Hour
+	})
 
-	ttlHours, err := strconv.Atoi(ttlHoursStr)
-	if err != nil || ttlHours <= 0 {
-		return defaultTokenTTLHours * time.Hour
-	}
-
-	return time.Duration(ttlHours) * time.Hour
+	return ttlDuration
 }

@@ -31,7 +31,11 @@ func CreateGroupChatHandler(c *gin.Context) {
 		return
 	}
 
-	currentUserID := c.GetUint(middleware.UserIDContextKey)
+	currentUserID, err := middleware.UserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	// ✅ 去重 + 自動加入自己
 	userMap := make(map[uint]bool)
@@ -59,7 +63,11 @@ func CreateGroupChatHandler(c *gin.Context) {
 	})
 }
 func GetChatsHandler(c *gin.Context) {
-	userID := c.GetUint(middleware.UserIDContextKey)
+	userID, err := middleware.UserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 	chats, err := service.GetUserChats(userID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "failed to get chats"})
@@ -81,7 +89,11 @@ func MarkReadHandler(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetUint(middleware.UserIDContextKey)
+	userID, err := middleware.UserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	var req struct {
 		LastReadMessageID uint `json:"last_read_message_id"`
@@ -111,7 +123,11 @@ func CreatePrivateChatHandler(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetUint(middleware.UserIDContextKey)
+	userID, err := middleware.UserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	chatID, err := service.CreatePrivateChat(userID, req.TargetUserID)
 	if err != nil {

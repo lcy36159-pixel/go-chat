@@ -23,7 +23,11 @@ type IncomingMessage struct {
 }
 
 func WebSocketHandler(c *gin.Context) {
-	userID := c.GetUint(middleware.UserIDContextKey)
+	userID, err := middleware.UserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	// ✅ 升級 WebSocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)

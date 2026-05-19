@@ -22,10 +22,14 @@ func GetMessagesHandler(c *gin.Context) {
 	}
 	chatID := uint(chatIDUint64)
 
-	userID := c.GetUint(middleware.UserIDContextKey)
+	userID, err := middleware.UserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	// 解析 last_id（pagination）
-	var lastID uint64 = 0
+	var lastID uint64
 	if lastIDStr != "" {
 		lastID, err = strconv.ParseUint(lastIDStr, 10, 64)
 		if err != nil {

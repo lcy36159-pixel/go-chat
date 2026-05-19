@@ -2,6 +2,10 @@
 
 Base URL: `http://localhost:8080`
 
+所有 API（含 WebSocket 握手）都需要 JWT 驗證：
+
+`Authorization: Bearer <token>`
+
 ---
 
 ## 目錄
@@ -23,11 +27,9 @@ Base URL: `http://localhost:8080`
 
 建立兩人私人聊天室。若已存在相同成員的私人聊天室，直接回傳既有的 `chat_id`。
 
-### Query 參數
+### 驗證
 
-| 名稱      | 類型 | 必填 | 說明              |
-| --------- | ---- | ---- | ----------------- |
-| `user_id` | uint | ✅    | 發起者的使用者 ID |
+發起者身分由 JWT 的 `user_id` 決定。
 
 ### Request Body（JSON）
 
@@ -56,6 +58,7 @@ Base URL: `http://localhost:8080`
 | HTTP 狀態                   | 說明                             |
 | --------------------------- | -------------------------------- |
 | `400 Bad Request`           | request body 格式錯誤            |
+| `401 Unauthorized`          | token 缺失或無效                 |
 | `500 Internal Server Error` | 建立失敗（例：與自己建立聊天室） |
 
 ---
@@ -66,11 +69,9 @@ Base URL: `http://localhost:8080`
 
 建立多人群組聊天室。發起者會自動被加入群組。
 
-### Query 參數
+### 驗證
 
-| 名稱      | 類型 | 必填 | 說明              |
-| --------- | ---- | ---- | ----------------- |
-| `user_id` | uint | ✅    | 發起者的使用者 ID |
+發起者身分由 JWT 的 `user_id` 決定。
 
 ### Request Body（JSON）
 
@@ -100,7 +101,8 @@ Base URL: `http://localhost:8080`
 
 | HTTP 狀態                   | 說明                                        |
 | --------------------------- | ------------------------------------------- |
-| `400 Bad Request`           | `name` 為空、`user_id` 無效或 body 格式錯誤 |
+| `400 Bad Request`           | `name` 為空或 body 格式錯誤                  |
+| `401 Unauthorized`          | token 缺失或無效                              |
 | `500 Internal Server Error` | 資料庫建立失敗                              |
 
 ---
@@ -111,11 +113,9 @@ Base URL: `http://localhost:8080`
 
 取得指定使用者的所有聊天室，包含最後一則訊息與未讀數。依最後訊息時間降序排列。
 
-### Query 參數
+### 驗證
 
-| 名稱      | 類型 | 必填 | 說明      |
-| --------- | ---- | ---- | --------- |
-| `user_id` | uint | ✅    | 使用者 ID |
+使用者身分由 JWT 的 `user_id` 決定。
 
 ### Response
 
@@ -154,7 +154,7 @@ Base URL: `http://localhost:8080`
 
 | HTTP 狀態                   | 說明           |
 | --------------------------- | -------------- |
-| `400 Bad Request`           | `user_id` 無效 |
+| `401 Unauthorized`          | token 缺失或無效 |
 | `500 Internal Server Error` | 查詢失敗       |
 
 ---
@@ -171,11 +171,9 @@ Base URL: `http://localhost:8080`
 | ---- | ---- | ---- | --------- |
 | `id` | uint | ✅    | 聊天室 ID |
 
-### Query 參數
+### 驗證
 
-| 名稱      | 類型 | 必填 | 說明      |
-| --------- | ---- | ---- | --------- |
-| `user_id` | uint | ✅    | 使用者 ID |
+使用者身分由 JWT 的 `user_id` 決定。
 
 ### Request Body（JSON）
 
@@ -203,7 +201,8 @@ Base URL: `http://localhost:8080`
 
 | HTTP 狀態                   | 說明                                                    |
 | --------------------------- | ------------------------------------------------------- |
-| `400 Bad Request`           | `id`/`user_id` 格式錯誤，或 `last_read_message_id` 缺少 |
+| `400 Bad Request`           | `id` 格式錯誤，或 `last_read_message_id` 缺少           |
+| `401 Unauthorized`          | token 缺失或無效                                          |
 | `403 Forbidden`             | 使用者不是該聊天室成員，或訊息不屬於該聊天室            |
 | `500 Internal Server Error` | 資料庫更新失敗                                          |
 
@@ -290,17 +289,13 @@ GET /messages?chat_id=10&last_id=36
 
 使用標準 `Upgrade: websocket` 握手，框架採用 [gorilla/websocket](https://github.com/gorilla/websocket)。
 
-### Query 參數
+### 驗證
 
-| 名稱      | 類型 | 必填 | 說明          |
-| --------- | ---- | ---- | ------------- |
-| `user_id` | uint | ✅    | 連線使用者 ID |
+連線使用者身分由 JWT 的 `user_id` 決定。
 
 **連線範例**
 
-```
-ws://localhost:8080/ws?user_id=1
-```
+`ws://localhost:8080/ws`
 
 ---
 

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"go-chat/internal/middleware"
 	"go-chat/internal/service"
 	"net/http"
 	"strconv"
@@ -30,14 +31,7 @@ func CreateGroupChatHandler(c *gin.Context) {
 		return
 	}
 
-	// ✅ 取得目前使用者
-	userIDStr := c.Query("user_id")
-	userIDUint64, err := strconv.ParseUint(userIDStr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id"})
-		return
-	}
-	currentUserID := uint(userIDUint64)
+	currentUserID := c.GetUint(middleware.UserIDContextKey)
 
 	// ✅ 去重 + 自動加入自己
 	userMap := make(map[uint]bool)
@@ -65,15 +59,8 @@ func CreateGroupChatHandler(c *gin.Context) {
 	})
 }
 func GetChatsHandler(c *gin.Context) {
-	userIDStr := c.Query("user_id")
-
-	userIDUint64, err := strconv.ParseUint(userIDStr, 10, 64)
-	if err != nil {
-		c.JSON(400, gin.H{"error": "invalid user_id"})
-		return
-	}
-
-	chats, err := service.GetUserChats(uint(userIDUint64))
+	userID := c.GetUint(middleware.UserIDContextKey)
+	chats, err := service.GetUserChats(userID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "failed to get chats"})
 		return
@@ -94,12 +81,7 @@ func MarkReadHandler(c *gin.Context) {
 		return
 	}
 
-	userIDStr := c.Query("user_id")
-	userIDUint64, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id"})
-		return
-	}
+	userID := c.GetUint(middleware.UserIDContextKey)
 
 	var req struct {
 		LastReadMessageID uint `json:"last_read_message_id"`
@@ -109,7 +91,7 @@ func MarkReadHandler(c *gin.Context) {
 		return
 	}
 
-	if err := service.MarkMessagesRead(uint(userIDUint64), uint(chatIDUint64), req.LastReadMessageID); err != nil {
+	if err := service.MarkMessagesRead(userID, uint(chatIDUint64), req.LastReadMessageID); err != nil {
 		if errors.Is(err, service.ErrNotChatMember) || errors.Is(err, service.ErrInvalidMessageID) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
@@ -129,9 +111,7 @@ func CreatePrivateChatHandler(c *gin.Context) {
 		return
 	}
 
-	userIDStr := c.Query("user_id")
-	userIDUint64, _ := strconv.ParseUint(userIDStr, 10, 64)
-	userID := uint(userIDUint64)
+	userID := c.GetUint(middleware.UserIDContextKey)
 
 	chatID, err := service.CreatePrivateChat(userID, req.TargetUserID)
 	if err != nil {

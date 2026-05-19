@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"go-chat/internal/middleware"
 	"go-chat/internal/repository"
 	"go-chat/internal/service"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 func GetMessagesHandler(c *gin.Context) {
 	chatIDStr := c.Query("chat_id")
 	lastIDStr := c.Query("last_id")
-	userIDStr := c.Query("user_id")
 
 	// 解析 chat_id
 	chatIDUint64, err := strconv.ParseUint(chatIDStr, 10, 64)
@@ -22,13 +22,7 @@ func GetMessagesHandler(c *gin.Context) {
 	}
 	chatID := uint(chatIDUint64)
 
-	// 解析 user_id
-	userIDUint64, err := strconv.ParseUint(userIDStr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id"})
-		return
-	}
-	userID := uint(userIDUint64)
+	userID := c.GetUint(middleware.UserIDContextKey)
 
 	// 解析 last_id（pagination）
 	var lastID uint64 = 0

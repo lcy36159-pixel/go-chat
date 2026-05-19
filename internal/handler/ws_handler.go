@@ -3,11 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"go-chat/internal/domain"
+	"go-chat/internal/middleware"
 	"go-chat/internal/repository"
 	"go-chat/internal/service"
 	"go-chat/internal/ws"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -23,14 +23,7 @@ type IncomingMessage struct {
 }
 
 func WebSocketHandler(c *gin.Context) {
-	// ✅ 先驗證 user_id（避免殭屍連線）
-	userIDStr := c.Query("user_id")
-	userIDUint64, err := strconv.ParseUint(userIDStr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id"})
-		return
-	}
-	userID := uint(userIDUint64)
+	userID := c.GetUint(middleware.UserIDContextKey)
 
 	// ✅ 升級 WebSocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)

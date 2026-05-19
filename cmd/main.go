@@ -2,6 +2,7 @@ package main
 
 import (
 	"go-chat/internal/handler"
+	"go-chat/internal/middleware"
 	"go-chat/pkg/db"
 
 	"github.com/gin-gonic/gin"
@@ -19,11 +20,13 @@ func main() {
 	// )
 
 	r := gin.Default()
-	r.POST("/chats/private", handler.CreatePrivateChatHandler)
-	r.POST("/chats/group", handler.CreateGroupChatHandler)
-	r.POST("/chats/:id/read", handler.MarkReadHandler)
-	r.GET("/ws", handler.WebSocketHandler)
-	r.GET("/messages", handler.GetMessagesHandler)
-	r.GET("/chats", handler.GetChatsHandler)
+	auth := r.Group("/")
+	auth.Use(middleware.AuthMiddleware())
+	auth.POST("/chats/private", handler.CreatePrivateChatHandler)
+	auth.POST("/chats/group", handler.CreateGroupChatHandler)
+	auth.POST("/chats/:id/read", handler.MarkReadHandler)
+	auth.GET("/ws", handler.WebSocketHandler)
+	auth.GET("/messages", handler.GetMessagesHandler)
+	auth.GET("/chats", handler.GetChatsHandler)
 	r.Run(":8080")
 }

@@ -28,6 +28,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		token := strings.TrimSpace(strings.TrimPrefix(authHeader, bearerPrefix))
 		userID, err := jwt.ParseToken(token)
 		if err != nil {
+			_ = c.Error(err)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return
 		}

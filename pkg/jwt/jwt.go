@@ -3,12 +3,13 @@ package jwt
 import (
 	"errors"
 	"os"
+	"strconv"
 	"time"
 
 	jwtgo "github.com/golang-jwt/jwt/v5"
 )
 
-const tokenTTL = 24 * time.Hour
+const defaultTokenTTLHours = 24
 
 type Claims struct {
 	UserID uint `json:"user_id"`
@@ -23,12 +24,16 @@ func GenerateToken(userID uint) (string, error) {
 	claims := Claims{
 		UserID: userID,
 		RegisteredClaims: jwtgo.RegisteredClaims{
-			ExpiresAt: jwtgo.NewNumericDate(time.Now().Add(tokenTTL)),
+			ExpiresAt: jwtgo.NewNumericDate(time.Now().Add(tokenTTL())),
 		},
 	}
 
 	token := jwtgo.NewWithClaims(jwtgo.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret())
+	secret, err := jwtSecret()
+	if err != nil {
+		return "", err
+	}
+	return token.SignedString(secret)
 }
 
 func ParseToken(tokenStr string) (uint, error) {
@@ -41,7 +46,7 @@ func ParseToken(tokenStr string) (uint, error) {
 		if token.Method != jwtgo.SigningMethodHS256 {
 			return nil, errors.New("invalid signing method")
 		}
-		return jwtSecret(), nil
+		return jwtSecret()
 	})
 	if err != nil {
 		return 0, err
@@ -56,10 +61,24 @@ func ParseToken(tokenStr string) (uint, error) {
 	return claims.UserID, nil
 }
 
-func jwtSecret() []byte {
+func jwtSecret() ([]byte, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "go-chat-secret"
+		return nil, errors.New("JWT_SECRET is required")
 	}
-	return []byte(secret)
+	return []byte(secret), nil
+}
+
+func tokenTTL() time.Duration {
+	ttlHoursStr := os.Getenv("JWT_TTL_HOURS")
+	if ttlHoursStr == "" {
+		return defaultTokenTTLHours * time.Hour
+	}
+
+	ttlHours, err := strconv.Atoi(ttlHoursStr)
+	if err != nil || ttlHours <= 0 {
+		return defaultTokenTTLHours * time.Hour
+	}
+
+	return time.Duration(ttlHours) * time.Hour
 }

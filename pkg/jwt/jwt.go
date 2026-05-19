@@ -4,12 +4,20 @@ import (
 	"errors"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	jwtgo "github.com/golang-jwt/jwt/v5"
 )
 
 const defaultTokenTTLHours = 24
+const minSecretLength = 32
+
+var (
+	loadSecretOnce sync.Once
+	secretBytes    []byte
+	secretErr      error
+)
 
 type Claims struct {
 	UserID uint `json:"user_id"`
@@ -43,7 +51,8 @@ func ParseToken(tokenStr string) (uint, error) {
 
 	claims := &Claims{}
 	token, err := jwtgo.ParseWithClaims(tokenStr, claims, func(token *jwtgo.Token) (interface{}, error) {
-		if token.Method != jwtgo.SigningMethodHS256 {
+		method, ok := token.Method.(*jwtgo.SigningMethodHMAC)
+		if !ok || method.Alg() != jwtgo.SigningMethodHS256.Alg() {
 			return nil, errors.New("invalid signing method")
 		}
 		return jwtSecret()
@@ -62,11 +71,19 @@ func ParseToken(tokenStr string) (uint, error) {
 }
 
 func jwtSecret() ([]byte, error) {
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		return nil, errors.New("JWT_SECRET is required")
-	}
-	return []byte(secret), nil
+	loadSecretOnce.Do(func() {
+		secret := os.Getenv("JWT_SECRET")
+		if secret == "" {
+			secretErr = errors.New("JWT_SECRET is required")
+			return
+		}
+		if len(secret) < minSecretLength {
+			secretErr = errors.New("JWT_SECRET must be at least 32 characters")
+			return
+		}
+		secretBytes = []byte(secret)
+	})
+	return secretBytes, secretErr
 }
 
 func tokenTTL() time.Duration {

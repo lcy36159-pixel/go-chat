@@ -8,7 +8,7 @@ Base URL: `http://localhost:8080`
 
 伺服器需設定環境變數：
 
-- `JWT_SECRET`：JWT 簽章密鑰（必填）
+- `JWT_SECRET`：JWT 簽章密鑰（必填，至少 32 字元）
 - `JWT_TTL_HOURS`：token 有效小時數（選填，預設 24）
 
 ---

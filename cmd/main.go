@@ -1,14 +1,22 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"go-chat/internal/handler"
 	"go-chat/internal/middleware"
 	"go-chat/pkg/db"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	if err := godotenv.Load(".env"); err != nil && !os.IsNotExist(err) {
+		log.Fatalf("failed to load .env: %v", err)
+	}
+
 	db.Init()
 
 	// db.DB.AutoMigrate(
@@ -28,5 +36,15 @@ func main() {
 	auth.GET("/ws", handler.WebSocketHandler)
 	auth.GET("/messages", handler.GetMessagesHandler)
 	auth.GET("/chats", handler.GetChatsHandler)
-	r.Run(":8080")
+	if err := r.Run(":" + serverPort()); err != nil {
+		log.Fatalf("failed to start server: %v", err)
+	}
+}
+
+func serverPort() string {
+	port := os.Getenv("APP_PORT")
+	if port == "" {
+		return "8080"
+	}
+	return port
 }

@@ -1,4 +1,5 @@
-# ===== go-chat .env 範例（檔名可複製為 .env 使用） =====
+# ===== go-chat .env 範例 =====
+# 使用方式：將本檔複製為 `.env`
 
 # JWT 簽章密鑰（必填）
 # 注意：長度至少 32 字元，且嚴禁直接使用範例值於正式環境
@@ -8,9 +9,11 @@ JWT_SECRET=your-development-only-secret-key-change-this-before-production-2026
 # 不填時預設為 24
 JWT_TTL_HOURS=24
 
-# ===== 下面為資料庫設定範例（目前程式碼尚未讀取這些變數） =====
-# 目前 DB 連線字串在 pkg/db/db.go 內寫死：
-# host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable
+# API 伺服器埠號（選填）
+# 不填時預設為 8080
+APP_PORT=8080
+
+# ===== PostgreSQL 資料庫設定 =====
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres

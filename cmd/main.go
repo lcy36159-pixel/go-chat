@@ -29,6 +29,9 @@ func main() {
 
 	r := gin.Default()
 	auth := r.Group("/")
+	// login 不需要 auth
+	r.GET("/login", handler.LoginHandler)
+	// 需要登入的
 	auth.Use(middleware.AuthMiddleware())
 	auth.POST("/chats/private", handler.CreatePrivateChatHandler)
 	auth.POST("/chats/group", handler.CreateGroupChatHandler)

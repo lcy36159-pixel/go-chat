@@ -32,6 +32,7 @@ func main() {
 	// login 不需要 auth
 	r.GET("/login", handler.LoginHandler)
 	// WebSocket 連線
+	r.GET("/ws", handler.WebSocketHandler)
 	// 需要登入的
 	auth.Use(middleware.AuthMiddleware())
 	auth.POST("/chats/private", handler.CreatePrivateChatHandler)

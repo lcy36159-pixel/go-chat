@@ -100,12 +100,12 @@ DROP TABLE IF EXISTS "public"."users";
 CREATE TABLE "public"."users" (
   "id" int4 NOT NULL DEFAULT nextval('users_id_seq'::regclass),
   "username" varchar(50) COLLATE "pg_catalog"."default" NOT NULL,
-  "password_hash" text COLLATE "pg_catalog"."default" NOT NULL,
+  "password" text COLLATE "pg_catalog"."default" NOT NULL,
   "created_at" timestamp(6) DEFAULT CURRENT_TIMESTAMP
 )
 ;
 COMMENT ON COLUMN "public"."users"."username" IS '使用者帳號（唯一）';
-COMMENT ON COLUMN "public"."users"."password_hash" IS '密碼';
+COMMENT ON COLUMN "public"."users"."password" IS '密碼';
 COMMENT ON COLUMN "public"."users"."created_at" IS '建立時間';
 COMMENT ON TABLE "public"."users" IS '使用者基本資料';
 

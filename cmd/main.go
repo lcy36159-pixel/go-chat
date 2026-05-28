@@ -29,8 +29,8 @@ func main() {
 
 	r := gin.Default()
 	auth := r.Group("/")
-	// login 不需要 auth
-	r.GET("/login", handler.LoginHandler)
+	r.POST("/register", handler.RegisterHandler)
+	r.POST("/login", handler.LoginHandler)
 	// WebSocket 連線
 	r.GET("/ws", handler.WebSocketHandler)
 	// 需要登入的

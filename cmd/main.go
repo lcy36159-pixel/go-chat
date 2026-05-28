@@ -35,10 +35,15 @@ func main() {
 	r.GET("/ws", handler.WebSocketHandler)
 	// 需要登入的
 	auth.Use(middleware.AuthMiddleware())
+	// 建立私人聊天室
 	auth.POST("/chats/private", handler.CreatePrivateChatHandler)
+	// 建立群組聊天室
 	auth.POST("/chats/group", handler.CreateGroupChatHandler)
+	// 標記已讀
 	auth.POST("/chats/:id/read", handler.MarkReadHandler)
+	// 取得訊息
 	auth.GET("/messages", handler.GetMessagesHandler)
+	// 取得聊天室清單
 	auth.GET("/chats", handler.GetChatsHandler)
 	if err := r.Run(":" + serverPort()); err != nil {
 		log.Fatalf("failed to start server: %v", err)

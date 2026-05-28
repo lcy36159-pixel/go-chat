@@ -16,6 +16,7 @@ import (
 
 var (
 	ErrInvalidAuthInput   = errors.New("username and password are required")
+	ErrWeakPassword       = errors.New("password must be at least 6 characters")
 	ErrUsernameTaken      = errors.New("username already exists")
 	ErrInvalidCredentials = errors.New("invalid username or password")
 )
@@ -26,13 +27,8 @@ func Register(username, password string) (uint, error) {
 	if username == "" || password == "" {
 		return 0, ErrInvalidAuthInput
 	}
-
-	existing, err := repository.GetUserByUsername(username)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return 0, fmt.Errorf("failed to check existing user: %w", err)
-	}
-	if existing != nil {
-		return 0, ErrUsernameTaken
+	if len(password) < 6 {
+		return 0, ErrWeakPassword
 	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -45,9 +41,6 @@ func Register(username, password string) (uint, error) {
 		Password: string(passwordHash),
 	}
 	if err := repository.CreateUser(user); err != nil {
-		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return 0, ErrUsernameTaken
-		}
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return 0, ErrUsernameTaken

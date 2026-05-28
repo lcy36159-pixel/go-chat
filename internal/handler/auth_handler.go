@@ -21,19 +21,19 @@ type LoginRequest struct {
 func RegisterHandler(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
 
 	userID, err := service.Register(req.Username, req.Password)
 	if err != nil {
 		switch {
-		case errors.Is(err, service.ErrInvalidAuthInput):
+		case errors.Is(err, service.ErrInvalidAuthInput), errors.Is(err, service.ErrWeakPassword):
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		case errors.Is(err, service.ErrUsernameTaken):
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "registration failed, please try again later"})
 		}
 		return
 	}
@@ -46,7 +46,7 @@ func RegisterHandler(c *gin.Context) {
 func LoginHandler(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
 
@@ -56,9 +56,9 @@ func LoginHandler(c *gin.Context) {
 		case errors.Is(err, service.ErrInvalidAuthInput):
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		case errors.Is(err, service.ErrInvalidCredentials):
-			c.JSON(http.StatusUnauthorized, gin.H{"error": service.ErrInvalidCredentials.Error()})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to login"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "login failed, please try again later"})
 		}
 		return
 	}

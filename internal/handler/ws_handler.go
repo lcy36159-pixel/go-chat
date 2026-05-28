@@ -3,10 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"go-chat/internal/domain"
-	"go-chat/internal/middleware"
 	"go-chat/internal/repository"
 	"go-chat/internal/service"
 	"go-chat/internal/ws"
+	"go-chat/pkg/jwt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -23,22 +23,23 @@ type IncomingMessage struct {
 }
 
 func WebSocketHandler(c *gin.Context) {
-	userID, err := middleware.UserIDFromContext(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	// ✅ 升級 WebSocket
+	// 升級 WebSocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		println("ReadMessage error:", err.Error())
+		println("Upgrade error:", err.Error())
+		return
+	}
+	defer conn.Close()
+
+	// 用 token 取得 userID
+	token := c.Query("token")
+	userID, err := jwt.ParseToken(token)
+	if err != nil {
+		println("Invalid token")
 		return
 	}
 
-	defer conn.Close()
-
-	// ✅ 註冊 client
+	// 註冊 client
 	client := &ws.Client{
 		UserID: userID,
 		Conn:   conn,

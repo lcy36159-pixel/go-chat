@@ -31,12 +31,12 @@ func main() {
 	auth := r.Group("/")
 	// login 不需要 auth
 	r.GET("/login", handler.LoginHandler)
+	// WebSocket 連線
 	// 需要登入的
 	auth.Use(middleware.AuthMiddleware())
 	auth.POST("/chats/private", handler.CreatePrivateChatHandler)
 	auth.POST("/chats/group", handler.CreateGroupChatHandler)
 	auth.POST("/chats/:id/read", handler.MarkReadHandler)
-	auth.GET("/ws", handler.WebSocketHandler)
 	auth.GET("/messages", handler.GetMessagesHandler)
 	auth.GET("/chats", handler.GetChatsHandler)
 	if err := r.Run(":" + serverPort()); err != nil {

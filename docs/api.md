@@ -2,7 +2,7 @@
 
 Base URL: `http://localhost:8080`
 
-所有 API（含 WebSocket 握手）都需要 JWT 驗證：
+除 `POST /register` 與 `POST /login` 外，所有 API（含 WebSocket 握手）都需要 JWT 驗證：
 
 `Authorization: Bearer <token>`
 
@@ -17,6 +17,8 @@ Base URL: `http://localhost:8080`
 
 | 方法 | 路徑              | 說明                 |
 | ---- | ----------------- | -------------------- |
+| POST | `/register`       | 註冊新使用者         |
+| POST | `/login`          | 使用者登入並取得 JWT |
 | POST | `/chats/private`  | 建立私人聊天室       |
 | POST | `/chats/group`    | 建立群組聊天室       |
 | GET  | `/chats`          | 取得使用者聊天室列表 |
@@ -26,7 +28,97 @@ Base URL: `http://localhost:8080`
 
 ---
 
-## 1. 建立私人聊天室
+## 1. 註冊
+
+**`POST /register`**
+
+建立新使用者帳號。
+
+### 驗證
+
+此 API 為公開端點，不需要 JWT。
+
+### Request Body（JSON）
+
+| 欄位       | 類型   | 必填 | 說明     |
+| ---------- | ------ | ---- | -------- |
+| `account`  | string | ✅    | 登入帳號（唯一） |
+| `username` | string | ✅    | 顯示名稱 |
+| `password` | string | ✅    | 密碼（至少 6 碼） |
+
+```json
+{
+  "account": "alice001",
+  "username": "alice",
+  "password": "secret123"
+}
+```
+
+### Response
+
+**成功 `201 Created`**
+
+```json
+{
+  "user_id": 1
+}
+```
+
+**錯誤**
+
+| HTTP 狀態                   | 說明                                       |
+| --------------------------- | ------------------------------------------ |
+| `400 Bad Request`           | body 格式錯誤、帳密缺失、或密碼長度不足 6 碼 |
+| `409 Conflict`              | `account` 已存在                           |
+| `500 Internal Server Error` | 註冊失敗                                   |
+
+---
+
+## 2. 登入
+
+**`POST /login`**
+
+使用帳號密碼登入，成功後回傳 JWT token。
+
+### 驗證
+
+此 API 為公開端點，不需要 JWT。
+
+### Request Body（JSON）
+
+| 欄位       | 類型   | 必填 | 說明     |
+| ---------- | ------ | ---- | -------- |
+| `account`  | string | ✅    | 登入帳號 |
+| `password` | string | ✅    | 密碼     |
+
+```json
+{
+  "account": "alice001",
+  "password": "secret123"
+}
+```
+
+### Response
+
+**成功 `200 OK`**
+
+```json
+{
+  "token": "<jwt_token>"
+}
+```
+
+**錯誤**
+
+| HTTP 狀態                   | 說明                            |
+| --------------------------- | ------------------------------- |
+| `400 Bad Request`           | body 格式錯誤或帳密缺失         |
+| `401 Unauthorized`          | account 或密碼錯誤              |
+| `500 Internal Server Error` | 登入失敗                        |
+
+---
+
+## 3. 建立私人聊天室
 
 **`POST /chats/private`**
 
@@ -68,7 +160,7 @@ Base URL: `http://localhost:8080`
 
 ---
 
-## 2. 建立群組聊天室
+## 4. 建立群組聊天室
 
 **`POST /chats/group`**
 
@@ -112,7 +204,7 @@ Base URL: `http://localhost:8080`
 
 ---
 
-## 3. 取得使用者聊天室列表
+## 5. 取得使用者聊天室列表
 
 **`GET /chats`**
 
@@ -164,7 +256,7 @@ Base URL: `http://localhost:8080`
 
 ---
 
-## 4. 標記已讀
+## 6. 標記已讀
 
 **`POST /chats/:id/read`**
 
@@ -213,7 +305,7 @@ Base URL: `http://localhost:8080`
 
 ---
 
-## 5. 取得聊天訊息（分頁）
+## 7. 取得聊天訊息（分頁）
 
 **`GET /messages`**
 
@@ -284,7 +376,7 @@ GET /messages?chat_id=10&last_id=36
 
 ---
 
-## 6. WebSocket 即時通訊
+## 8. WebSocket 即時通訊
 
 **`GET /ws`**
 

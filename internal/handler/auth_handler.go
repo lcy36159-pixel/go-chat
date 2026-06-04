@@ -1,26 +1,66 @@
 package handler
 
 import (
+	"errors"
+	"go-chat/internal/service"
 	"net/http"
-	"strconv"
-
-	"go-chat/pkg/jwt"
 
 	"github.com/gin-gonic/gin"
 )
 
-func LoginHandler(c *gin.Context) {
-	userIDStr := c.Query("user_id")
+type RegisterRequest struct {
+	Account  string `json:"account"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
 
-	userIDUint64, err := strconv.ParseUint(userIDStr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id"})
+type LoginRequest struct {
+	Account  string `json:"account"`
+	Password string `json:"password"`
+}
+
+func RegisterHandler(c *gin.Context) {
+	var req RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
 
-	token, err := jwt.GenerateToken(uint(userIDUint64))
+	userID, err := service.Register(req.Account, req.Username, req.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		switch {
+		case errors.Is(err, service.ErrInvalidRegisterInput), errors.Is(err, service.ErrWeakPassword):
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		case errors.Is(err, service.ErrAccountTaken):
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "registration failed, please try again later"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"user_id": userID,
+	})
+}
+
+func LoginHandler(c *gin.Context) {
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	token, err := service.Login(req.Account, req.Password)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidLoginInput):
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		case errors.Is(err, service.ErrInvalidCredentials):
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "login failed, please try again later"})
+		}
 		return
 	}
 

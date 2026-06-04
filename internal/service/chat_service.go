@@ -10,8 +10,10 @@ import (
 
 // Sentinel errors for MarkMessagesRead authorization failures.
 var (
-	ErrNotChatMember   = errors.New("not a chat member")
+	ErrNotChatMember    = errors.New("not a chat member")
 	ErrInvalidMessageID = errors.New("invalid message id")
+	ErrNotGroupChat     = errors.New("chat is not a group")
+	ErrAlreadyMember    = errors.New("user is already a member")
 )
 
 //
@@ -143,6 +145,46 @@ func MarkMessagesRead(userID, chatID, lastReadMessageID uint) error {
 // 取得使用者聊天室列表
 func GetUserChats(userID uint) ([]domain.ChatDTO, error) {
 	return repository.GetUserChats(userID)
+}
+
+// AddMemberToGroup adds targetUserID to a group chat on behalf of operatorID.
+// operatorID must already be a member of the group chat.
+func AddMemberToGroup(operatorID, chatID, targetUserID uint) error {
+	if chatID == 0 {
+		return errors.New("chat_id is required")
+	}
+	if targetUserID == 0 {
+		return errors.New("user_id is required")
+	}
+
+	// 驗證操作者是群組成員
+	isMember, err := repository.IsChatMember(operatorID, chatID)
+	if err != nil {
+		return fmt.Errorf("failed to verify membership: %w", err)
+	}
+	if !isMember {
+		return ErrNotChatMember
+	}
+
+	// 確認是群組聊天室
+	chat, err := repository.GetChatByID(chatID)
+	if err != nil {
+		return fmt.Errorf("failed to get chat: %w", err)
+	}
+	if chat.Type != "group" {
+		return ErrNotGroupChat
+	}
+
+	// 檢查目標用戶是否已在群組中
+	alreadyMember, err := repository.IsChatMember(targetUserID, chatID)
+	if err != nil {
+		return fmt.Errorf("failed to check target membership: %w", err)
+	}
+	if alreadyMember {
+		return ErrAlreadyMember
+	}
+
+	return repository.AddMemberToChat(chatID, targetUserID)
 }
 
 func CreatePrivateChat(user1 uint, user2 uint) (uint, error) {

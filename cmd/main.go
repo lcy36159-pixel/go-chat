@@ -39,6 +39,8 @@ func main() {
 	auth.POST("/chats/private", handler.CreatePrivateChatHandler)
 	// 建立群組聊天室
 	auth.POST("/chats/group", handler.CreateGroupChatHandler)
+	// 加入群組成員
+	auth.POST("/chats/:id/members", handler.AddGroupMemberHandler)
 	// 標記已讀
 	auth.POST("/chats/:id/read", handler.MarkReadHandler)
 	// 取得訊息

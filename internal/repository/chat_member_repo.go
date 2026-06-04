@@ -1,6 +1,9 @@
 package repository
 
-import "go-chat/pkg/db"
+import (
+	"go-chat/internal/domain"
+	"go-chat/pkg/db"
+)
 
 func GetUserIDsByChatID(chatID uint) ([]uint, error) {
 	var userIDs []uint
@@ -21,4 +24,16 @@ func IsChatMember(userID, chatID uint) (bool, error) {
 		Where("chat_id = ? AND user_id = ?", chatID, userID).
 		Count(&count).Error
 	return count > 0, err
+}
+
+// AddMemberToChat adds a user to a chat if not already a member.
+func AddMemberToChat(chatID, userID uint) error {
+	isMember, err := IsChatMember(userID, chatID)
+	if err != nil {
+		return err
+	}
+	if isMember {
+		return nil
+	}
+	return db.DB.Create(&domain.ChatMember{ChatID: chatID, UserID: userID}).Error
 }

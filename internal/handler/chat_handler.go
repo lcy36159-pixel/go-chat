@@ -133,11 +133,14 @@ func GetGroupMembersHandler(c *gin.Context) {
 
 	members, err := service.GetGroupMembers(requesterID, uint(chatIDUint64))
 	if err != nil {
-		if errors.Is(err, service.ErrNotChatMember) {
+		switch {
+		case errors.Is(err, service.ErrNotChatMember):
 			c.JSON(http.StatusForbidden, gin.H{"error": "you are not a member of this group"})
-			return
+		case errors.Is(err, service.ErrNotGroupChat):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "chat is not a group"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get members"})
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get members"})
 		return
 	}
 

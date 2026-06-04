@@ -198,6 +198,14 @@ func GetGroupMembers(requesterID, chatID uint) ([]domain.MemberInfo, error) {
 		return nil, ErrNotChatMember
 	}
 
+	chat, err := repository.GetChatByID(chatID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get chat: %w", err)
+	}
+	if chat.Type != "group" {
+		return nil, ErrNotGroupChat
+	}
+
 	return repository.GetGroupMembers(chatID)
 }
 

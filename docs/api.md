@@ -42,11 +42,13 @@ Base URL: `http://localhost:8080`
 
 | 欄位       | 類型   | 必填 | 說明     |
 | ---------- | ------ | ---- | -------- |
-| `username` | string | ✅    | 使用者名稱 |
+| `account`  | string | ✅    | 登入帳號（唯一） |
+| `username` | string | ✅    | 顯示名稱 |
 | `password` | string | ✅    | 密碼（至少 6 碼） |
 
 ```json
 {
+  "account": "alice001",
   "username": "alice",
   "password": "secret123"
 }
@@ -67,7 +69,7 @@ Base URL: `http://localhost:8080`
 | HTTP 狀態                   | 說明                                       |
 | --------------------------- | ------------------------------------------ |
 | `400 Bad Request`           | body 格式錯誤、帳密缺失、或密碼長度不足 6 碼 |
-| `409 Conflict`              | `username` 已存在                          |
+| `409 Conflict`              | `account` 已存在                           |
 | `500 Internal Server Error` | 註冊失敗                                   |
 
 ---
@@ -86,12 +88,12 @@ Base URL: `http://localhost:8080`
 
 | 欄位       | 類型   | 必填 | 說明     |
 | ---------- | ------ | ---- | -------- |
-| `username` | string | ✅    | 使用者名稱 |
+| `account`  | string | ✅    | 登入帳號 |
 | `password` | string | ✅    | 密碼     |
 
 ```json
 {
-  "username": "alice",
+  "account": "alice001",
   "password": "secret123"
 }
 ```
@@ -111,7 +113,7 @@ Base URL: `http://localhost:8080`
 | HTTP 狀態                   | 說明                            |
 | --------------------------- | ------------------------------- |
 | `400 Bad Request`           | body 格式錯誤或帳密缺失         |
-| `401 Unauthorized`          | 帳號或密碼錯誤                  |
+| `401 Unauthorized`          | account 或密碼錯誤              |
 | `500 Internal Server Error` | 登入失敗                        |
 
 ---

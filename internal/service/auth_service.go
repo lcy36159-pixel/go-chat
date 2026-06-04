@@ -15,17 +15,19 @@ import (
 )
 
 var (
-	ErrInvalidAuthInput   = errors.New("username and password are required")
-	ErrWeakPassword       = errors.New("password must be at least 6 characters")
-	ErrUsernameTaken      = errors.New("username already exists")
-	ErrInvalidCredentials = errors.New("invalid username or password")
+	ErrInvalidRegisterInput = errors.New("account, username and password are required")
+	ErrInvalidLoginInput    = errors.New("account and password are required")
+	ErrWeakPassword         = errors.New("password must be at least 6 characters")
+	ErrAccountTaken         = errors.New("account already exists")
+	ErrInvalidCredentials   = errors.New("invalid account or password")
 )
 
-func Register(username, password string) (uint, error) {
+func Register(account, username, password string) (uint, error) {
+	account = strings.TrimSpace(account)
 	username = strings.TrimSpace(username)
 	password = strings.TrimSpace(password)
-	if username == "" || password == "" {
-		return 0, ErrInvalidAuthInput
+	if account == "" || username == "" || password == "" {
+		return 0, ErrInvalidRegisterInput
 	}
 	if len(password) < 6 {
 		return 0, ErrWeakPassword
@@ -37,13 +39,14 @@ func Register(username, password string) (uint, error) {
 	}
 
 	user := &domain.User{
-		Username: username,
-		Password: string(passwordHash),
+		Account:      account,
+		Username:     username,
+		PasswordHash: string(passwordHash),
 	}
 	if err := repository.CreateUser(user); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return 0, ErrUsernameTaken
+			return 0, ErrAccountTaken
 		}
 		return 0, fmt.Errorf("failed to create user: %w", err)
 	}
@@ -51,14 +54,14 @@ func Register(username, password string) (uint, error) {
 	return user.ID, nil
 }
 
-func Login(username, password string) (string, error) {
-	username = strings.TrimSpace(username)
+func Login(account, password string) (string, error) {
+	account = strings.TrimSpace(account)
 	password = strings.TrimSpace(password)
-	if username == "" || password == "" {
-		return "", ErrInvalidAuthInput
+	if account == "" || password == "" {
+		return "", ErrInvalidLoginInput
 	}
 
-	user, err := repository.GetUserByUsername(username)
+	user, err := repository.GetUserByAccount(account)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", ErrInvalidCredentials
@@ -66,7 +69,7 @@ func Login(username, password string) (string, error) {
 		return "", fmt.Errorf("failed to find user: %w", err)
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		return "", ErrInvalidCredentials
 	}
 

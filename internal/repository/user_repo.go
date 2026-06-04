@@ -9,9 +9,9 @@ func CreateUser(user *domain.User) error {
 	return db.DB.Create(user).Error
 }
 
-func GetUserByUsername(username string) (*domain.User, error) {
+func GetUserByAccount(account string) (*domain.User, error) {
 	var user domain.User
-	if err := db.DB.Where("username = ?", username).First(&user).Error; err != nil {
+	if err := db.DB.Where("account = ?", account).First(&user).Error; err != nil {
 		return nil, err
 	}
 

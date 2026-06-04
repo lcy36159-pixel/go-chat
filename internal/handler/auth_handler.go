@@ -9,12 +9,13 @@ import (
 )
 
 type RegisterRequest struct {
+	Account  string `json:"account"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
 type LoginRequest struct {
-	Username string `json:"username"`
+	Account  string `json:"account"`
 	Password string `json:"password"`
 }
 
@@ -25,12 +26,12 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	userID, err := service.Register(req.Username, req.Password)
+	userID, err := service.Register(req.Account, req.Username, req.Password)
 	if err != nil {
 		switch {
-		case errors.Is(err, service.ErrInvalidAuthInput), errors.Is(err, service.ErrWeakPassword):
+		case errors.Is(err, service.ErrInvalidRegisterInput), errors.Is(err, service.ErrWeakPassword):
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		case errors.Is(err, service.ErrUsernameTaken):
+		case errors.Is(err, service.ErrAccountTaken):
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "registration failed, please try again later"})
@@ -50,10 +51,10 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	token, err := service.Login(req.Username, req.Password)
+	token, err := service.Login(req.Account, req.Password)
 	if err != nil {
 		switch {
-		case errors.Is(err, service.ErrInvalidAuthInput):
+		case errors.Is(err, service.ErrInvalidLoginInput):
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		case errors.Is(err, service.ErrInvalidCredentials):
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})

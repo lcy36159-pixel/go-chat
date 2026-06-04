@@ -187,6 +187,20 @@ func AddMemberToGroup(operatorID, chatID, targetUserID uint) error {
 	return repository.AddMemberToChat(chatID, targetUserID)
 }
 
+// GetGroupMembers returns the members of a group chat.
+// requesterID must be a member of the chat.
+func GetGroupMembers(requesterID, chatID uint) ([]domain.MemberInfo, error) {
+	isMember, err := repository.IsChatMember(requesterID, chatID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify membership: %w", err)
+	}
+	if !isMember {
+		return nil, ErrNotChatMember
+	}
+
+	return repository.GetGroupMembers(chatID)
+}
+
 func CreatePrivateChat(user1 uint, user2 uint) (uint, error) {
 	if user1 == user2 {
 		return 0, errors.New("cannot chat with yourself")

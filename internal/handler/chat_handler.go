@@ -115,6 +115,35 @@ func MarkReadHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
+// GetGroupMembersHandler returns the member list of a group chat.
+// The caller must be a member of the chat.
+func GetGroupMembersHandler(c *gin.Context) {
+	chatIDStr := c.Param("id")
+	chatIDUint64, err := strconv.ParseUint(chatIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat_id"})
+		return
+	}
+
+	requesterID, err := middleware.UserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	members, err := service.GetGroupMembers(requesterID, uint(chatIDUint64))
+	if err != nil {
+		if errors.Is(err, service.ErrNotChatMember) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "you are not a member of this group"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get members"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"members": members})
+}
+
 // AddGroupMemberHandler adds a user to a group chat. The caller must be a group member.
 func AddGroupMemberHandler(c *gin.Context) {
 	chatIDStr := c.Param("id")

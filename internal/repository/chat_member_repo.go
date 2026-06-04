@@ -26,14 +26,7 @@ func IsChatMember(userID, chatID uint) (bool, error) {
 	return count > 0, err
 }
 
-// AddMemberToChat adds a user to a chat if not already a member.
+// AddMemberToChat inserts a new member row for the given chat and user.
 func AddMemberToChat(chatID, userID uint) error {
-	isMember, err := IsChatMember(userID, chatID)
-	if err != nil {
-		return err
-	}
-	if isMember {
-		return nil
-	}
 	return db.DB.Create(&domain.ChatMember{ChatID: chatID, UserID: userID}).Error
 }

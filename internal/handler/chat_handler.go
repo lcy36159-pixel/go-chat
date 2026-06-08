@@ -17,39 +17,33 @@ type CreateGroupChatRequest struct {
 // 建立群組聊天室
 func CreateGroupChatHandler(c *gin.Context) {
 	var req CreateGroupChatRequest
-
-	// ✅ 解析 request
+	// 取得 Name(群組名稱) 和 UserIDs(成員ID列表)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
-
-	// ✅ 驗證 name
+	// Name 為必填
 	if req.Name == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
 		return
 	}
-
+	// 取得當前使用者自己的ID(由 middleware 從 JWT 解析)
 	currentUserID, err := middleware.UserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-
-	// ✅ 去重 + 自動加入自己
+	// 去除重複的人，並且保證自己必須在名單之中
 	userMap := make(map[uint]bool)
 	userMap[currentUserID] = true
-
 	for _, uid := range req.UserIDs {
 		userMap[uid] = true
 	}
-
 	var finalUserIDs []uint
 	for uid := range userMap {
 		finalUserIDs = append(finalUserIDs, uid)
 	}
-
-	// ✅ 呼叫 service
+	// 建立群體聊天群組
 	chatID, err := service.CreateGroupChat(currentUserID, req.Name, finalUserIDs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create chat"})

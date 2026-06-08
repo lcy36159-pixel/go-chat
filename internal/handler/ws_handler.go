@@ -29,8 +29,8 @@ func WebSocketHandler(c *gin.Context) {
 		println("Upgrade error:", err.Error())
 		return
 	}
+	// 確保連線在函式結束時關閉
 	defer conn.Close()
-
 	// 用 token 取得 userID
 	token := c.Query("token")
 	userID, err := jwt.ParseToken(token)
@@ -47,15 +47,15 @@ func WebSocketHandler(c *gin.Context) {
 	ws.Register(client)
 
 	for {
-		// ✅ 讀取訊息
+		// 讀取訊息
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			println("ReadMessage error:", err.Error())
 			break
 		}
-
-		println("收到:", string(msg))
-
+		// Debug: 印出收到的訊息
+		// println("收到:", string(msg))
+		// 解析 JSON
 		var incoming IncomingMessage
 		if err := json.Unmarshal(msg, &incoming); err != nil {
 			println("JSON error:", err.Error())

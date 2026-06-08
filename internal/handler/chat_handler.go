@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"go-chat/internal/domain"
 	"go-chat/internal/middleware"
 	"go-chat/internal/service"
 	"net/http"
@@ -9,14 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type CreateGroupChatRequest struct {
-	Name    string `json:"name"`
-	UserIDs []uint `json:"user_ids"`
-}
-
 // 建立群組聊天室
 func CreateGroupChatHandler(c *gin.Context) {
-	var req CreateGroupChatRequest
+	var req domain.CreateGroupChatRequest
 	// 取得 Name(群組名稱) 和 UserIDs(成員ID列表)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
@@ -87,9 +83,7 @@ func MarkReadHandler(c *gin.Context) {
 		return
 	}
 	// 讀取last_read_message_id
-	var req struct {
-		LastReadMessageID uint `json:"last_read_message_id"`
-	}
+	var req domain.MarkMessagesReadRequest
 	if err := c.ShouldBindJSON(&req); err != nil || req.LastReadMessageID == 0 {
 		// last_read_message_id為必填且必須大於0，否則回傳400(StatusBadRequest)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "last_read_message_id is required"})
@@ -146,9 +140,7 @@ func AddGroupMemberHandler(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		UserID uint `json:"user_id"`
-	}
+	var req domain.AddGroupMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil || req.UserID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
 		return
@@ -162,12 +154,8 @@ func AddGroupMemberHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
-type CreatePrivateChatRequest struct {
-	TargetUserID uint `json:"target_user_id"`
-}
-
 func CreatePrivateChatHandler(c *gin.Context) {
-	var req CreatePrivateChatRequest
+	var req domain.CreatePrivateChatRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": "invalid request"})

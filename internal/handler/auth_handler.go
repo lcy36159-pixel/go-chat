@@ -1,26 +1,16 @@
 package handler
 
 import (
+	"go-chat/internal/domain"
 	"go-chat/internal/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-type RegisterRequest struct {
-	Account  string `json:"account"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type LoginRequest struct {
-	Account  string `json:"account"`
-	Password string `json:"password"`
-}
-
 func RegisterHandler(c *gin.Context) {
 	// 把body的內容從JSON轉乘struct(主要讀取account、username和password)
-	var req RegisterRequest
+	var req domain.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
@@ -39,7 +29,7 @@ func RegisterHandler(c *gin.Context) {
 
 func LoginHandler(c *gin.Context) {
 	// 讀取account和password
-	var req LoginRequest
+	var req domain.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return

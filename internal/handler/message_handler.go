@@ -2,7 +2,6 @@ package handler
 
 import (
 	"go-chat/internal/middleware"
-	"go-chat/internal/repository"
 	"go-chat/internal/service"
 	"net/http"
 	"strconv"
@@ -38,7 +37,7 @@ func GetMessagesHandler(c *gin.Context) {
 		}
 	}
 	// 取得訊息列表
-	msgs, err := repository.GetMessagesByChatID(chatID, uint(lastID), 20)
+	msgs, err := service.GetMessages(chatID, uint(lastID), 20)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch messages"})
 		return

@@ -82,28 +82,32 @@ type CreatePrivateChatRequest struct {
 }
 
 func MarkReadHandler(c *gin.Context) {
+	// 取得聊天室ID(網址是/chats/:id/read)
 	chatIDStr := c.Param("id")
 	chatIDUint64, err := strconv.ParseUint(chatIDStr, 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat_id"})
 		return
 	}
-
+	// 取得使用者ID
 	userID, err := middleware.UserIDFromContext(c)
 	if err != nil {
+		// 使用者未登入，回傳401(StatusUnauthorized)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-
+	// 讀取last_read_message_id
 	var req struct {
 		LastReadMessageID uint `json:"last_read_message_id"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil || req.LastReadMessageID == 0 {
+		// last_read_message_id為必填且必須大於0，否則回傳400(StatusBadRequest)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "last_read_message_id is required"})
 		return
 	}
-
+	// 執行標記已讀邏輯
 	if err := service.MarkMessagesRead(userID, uint(chatIDUint64), req.LastReadMessageID); err != nil {
+		// 非聊天室成員 or 非法訊息ID，回傳403(StatusForbidden)
 		if errors.Is(err, service.ErrNotChatMember) || errors.Is(err, service.ErrInvalidMessageID) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
@@ -115,28 +119,31 @@ func MarkReadHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
-// GetGroupMembersHandler returns the member list of a group chat.
-// The caller must be a member of the chat.
+// 回傳群組成員
 func GetGroupMembersHandler(c *gin.Context) {
+	// 取得聊天室ID(網址是/chats/:id/members)
 	chatIDStr := c.Param("id")
 	chatIDUint64, err := strconv.ParseUint(chatIDStr, 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat_id"})
 		return
 	}
-
+	// 取得使用者ID(由 middleware 從 JWT 解析)
 	requesterID, err := middleware.UserIDFromContext(c)
 	if err != nil {
+		// 使用者未登入，回傳401(StatusUnauthorized)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-
+	// 呼叫 service 取得成員列表
 	members, err := service.GetGroupMembers(requesterID, uint(chatIDUint64))
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrNotChatMember):
+			// 非聊天室成員，回傳403(StatusForbidden)
 			c.JSON(http.StatusForbidden, gin.H{"error": "you are not a member of this group"})
 		case errors.Is(err, service.ErrNotGroupChat):
+			// 非群組聊天室，回傳400(StatusBadRequest)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "chat is not a group"})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get members"})
@@ -147,7 +154,7 @@ func GetGroupMembersHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"members": members})
 }
 
-// AddGroupMemberHandler adds a user to a group chat. The caller must be a group member.
+// 將使用者加入群組聊天室
 func AddGroupMemberHandler(c *gin.Context) {
 	chatIDStr := c.Param("id")
 	chatIDUint64, err := strconv.ParseUint(chatIDStr, 10, 32)

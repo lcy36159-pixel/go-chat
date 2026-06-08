@@ -30,6 +30,7 @@ func main() {
 	r := gin.Default()
 	auth := r.Group("/")
 	r.POST("/register", handler.RegisterHandler)
+	// 登入並取得 JWT
 	r.POST("/login", handler.LoginHandler)
 	// WebSocket 連線
 	r.GET("/ws", handler.WebSocketHandler)

@@ -11,13 +11,13 @@ import (
 )
 
 func GetMessagesHandler(c *gin.Context) {
-	chatIDStr := c.Query("chat_id")
+	chatIDStr := c.Param("id")
 	lastIDStr := c.Query("last_id")
 
-	// 解析 chat_id
+	// 解析 id
 	chatIDUint64, err := strconv.ParseUint(chatIDStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat_id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 	chatID := uint(chatIDUint64)

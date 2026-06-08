@@ -47,7 +47,7 @@ func main() {
 	// 標記已讀
 	auth.POST("/chats/:id/read", handler.MarkReadHandler)
 	// 取得訊息
-	auth.GET("/messages", handler.GetMessagesHandler)
+	auth.GET("/chats/:id/messages", handler.GetMessagesHandler)
 	// 取得聊天室清單
 	auth.GET("/chats", handler.GetChatsHandler)
 	if err := r.Run(":" + serverPort()); err != nil {

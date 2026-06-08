@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"go-chat/internal/service"
 	"net/http"
 
@@ -28,14 +27,7 @@ func RegisterHandler(c *gin.Context) {
 
 	userID, err := service.Register(req.Account, req.Username, req.Password)
 	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrInvalidRegisterInput), errors.Is(err, service.ErrWeakPassword):
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		case errors.Is(err, service.ErrAccountTaken):
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "registration failed, please try again later"})
-		}
+		HandleError(c, err)
 		return
 	}
 
@@ -53,14 +45,7 @@ func LoginHandler(c *gin.Context) {
 
 	token, err := service.Login(req.Account, req.Password)
 	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrInvalidLoginInput):
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		case errors.Is(err, service.ErrInvalidCredentials):
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "login failed, please try again later"})
-		}
+		HandleError(c, err)
 		return
 	}
 

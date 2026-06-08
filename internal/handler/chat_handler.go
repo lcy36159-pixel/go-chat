@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"go-chat/internal/middleware"
 	"go-chat/internal/service"
 	"net/http"
@@ -104,11 +103,7 @@ func MarkReadHandler(c *gin.Context) {
 	}
 
 	if err := service.MarkMessagesRead(userID, uint(chatIDUint64), req.LastReadMessageID); err != nil {
-		if errors.Is(err, service.ErrNotChatMember) || errors.Is(err, service.ErrInvalidMessageID) {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to mark messages as read"})
+		HandleError(c, err)
 		return
 	}
 
@@ -133,14 +128,7 @@ func GetGroupMembersHandler(c *gin.Context) {
 
 	members, err := service.GetGroupMembers(requesterID, uint(chatIDUint64))
 	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrNotChatMember):
-			c.JSON(http.StatusForbidden, gin.H{"error": "you are not a member of this group"})
-		case errors.Is(err, service.ErrNotGroupChat):
-			c.JSON(http.StatusBadRequest, gin.H{"error": "chat is not a group"})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get members"})
-		}
+		HandleError(c, err)
 		return
 	}
 
@@ -171,16 +159,7 @@ func AddGroupMemberHandler(c *gin.Context) {
 	}
 
 	if err := service.AddMemberToGroup(operatorID, uint(chatIDUint64), req.UserID); err != nil {
-		switch {
-		case errors.Is(err, service.ErrNotChatMember):
-			c.JSON(http.StatusForbidden, gin.H{"error": "you are not a member of this group"})
-		case errors.Is(err, service.ErrNotGroupChat):
-			c.JSON(http.StatusBadRequest, gin.H{"error": "chat is not a group"})
-		case errors.Is(err, service.ErrAlreadyMember):
-			c.JSON(http.StatusConflict, gin.H{"error": "user is already a member"})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to add member"})
-		}
+		HandleError(c, err)
 		return
 	}
 
@@ -203,7 +182,7 @@ func CreatePrivateChatHandler(c *gin.Context) {
 
 	chatID, err := service.CreatePrivateChat(userID, req.TargetUserID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 

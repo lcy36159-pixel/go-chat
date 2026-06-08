@@ -22,6 +22,8 @@ Base URL: `http://localhost:8080`
 | POST | `/chats/private`  | 建立私人聊天室       |
 | POST | `/chats/group`    | 建立群組聊天室       |
 | GET  | `/chats`          | 取得使用者聊天室列表 |
+| GET  | `/chats/:id/members` | 取得群組成員列表   |
+| POST | `/chats/:id/members` | 新增群組成員       |
 | POST | `/chats/:id/read` | 標記已讀             |
 | GET  | `/messages`       | 取得聊天訊息（分頁） |
 | GET  | `/ws`             | WebSocket 即時通訊   |
@@ -256,7 +258,105 @@ Base URL: `http://localhost:8080`
 
 ---
 
-## 6. 標記已讀
+## 6. 取得群組成員列表
+
+**`GET /chats/:id/members`**
+
+取得指定群組聊天室的成員清單。
+
+### Path 參數
+
+| 名稱 | 類型 | 必填 | 說明      |
+| ---- | ---- | ---- | --------- |
+| `id` | uint | ✅    | 聊天室 ID |
+
+### 驗證
+
+使用者身分由 JWT 的 `user_id` 決定，且呼叫者必須是該聊天室成員。
+
+### Response
+
+**成功 `200 OK`**
+
+```json
+{
+  "members": [
+    {
+      "user_id": 1,
+      "username": "alice"
+    },
+    {
+      "user_id": 2,
+      "username": "bob"
+    }
+  ]
+}
+```
+
+**錯誤**
+
+| HTTP 狀態                   | 說明                        |
+| --------------------------- | --------------------------- |
+| `400 Bad Request`           | `id` 格式錯誤或聊天室不是群組 |
+| `401 Unauthorized`          | token 缺失或無效            |
+| `403 Forbidden`             | 呼叫者不是該聊天室成員      |
+| `500 Internal Server Error` | 查詢失敗                    |
+
+---
+
+## 7. 新增群組成員
+
+**`POST /chats/:id/members`**
+
+將指定使用者加入群組聊天室。
+
+> 路徑與「取得群組成員列表」相同，透過 HTTP 方法區分：`GET` 為查詢、`POST` 為新增。
+
+### Path 參數
+
+| 名稱 | 類型 | 必填 | 說明      |
+| ---- | ---- | ---- | --------- |
+| `id` | uint | ✅    | 聊天室 ID |
+
+### 驗證
+
+使用者身分由 JWT 的 `user_id` 決定，且呼叫者必須是該聊天室成員。
+
+### Request Body（JSON）
+
+| 欄位      | 類型 | 必填 | 說明                 |
+| --------- | ---- | ---- | -------------------- |
+| `user_id` | uint | ✅    | 要加入群組的使用者 ID |
+
+```json
+{
+  "user_id": 3
+}
+```
+
+### Response
+
+**成功 `200 OK`**
+
+```json
+{
+  "ok": true
+}
+```
+
+**錯誤**
+
+| HTTP 狀態                   | 說明                                     |
+| --------------------------- | ---------------------------------------- |
+| `400 Bad Request`           | `id` 格式錯誤、`user_id` 缺失，或聊天室不是群組 |
+| `401 Unauthorized`          | token 缺失或無效                         |
+| `403 Forbidden`             | 呼叫者不是該聊天室成員                   |
+| `409 Conflict`              | 使用者已經在群組中                       |
+| `500 Internal Server Error` | 新增失敗                                 |
+
+---
+
+## 8. 標記已讀
 
 **`POST /chats/:id/read`**
 
@@ -305,7 +405,7 @@ Base URL: `http://localhost:8080`
 
 ---
 
-## 7. 取得聊天訊息（分頁）
+## 9. 取得聊天訊息（分頁）
 
 **`GET /messages`**
 
@@ -376,7 +476,7 @@ GET /messages?chat_id=10&last_id=36
 
 ---
 
-## 8. WebSocket 即時通訊
+## 10. WebSocket 即時通訊
 
 **`GET /ws`**
 

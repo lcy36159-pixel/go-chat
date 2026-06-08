@@ -49,29 +49,26 @@ func CreateGroupChatHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create chat"})
 		return
 	}
-
-	// ✅ 回傳結果
+	// 回傳新建立的聊天室ID
 	c.JSON(http.StatusCreated, gin.H{
 		"chat_id": chatID,
 	})
 }
 func GetChatsHandler(c *gin.Context) {
+	// 取得使用者ID(由 middleware 從 JWT 解析)
 	userID, err := middleware.UserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	// 取得聊天室列表
 	chats, err := service.GetUserChats(userID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "failed to get chats"})
 		return
 	}
-
+	// 回傳聊天室列表
 	c.JSON(200, chats)
-}
-
-type CreatePrivateChatRequest struct {
-	TargetUserID uint `json:"target_user_id"`
 }
 
 func MarkReadHandler(c *gin.Context) {
@@ -103,7 +100,7 @@ func MarkReadHandler(c *gin.Context) {
 		HandleError(c, err)
 		return
 	}
-
+	// 回傳
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
@@ -129,19 +126,20 @@ func GetGroupMembersHandler(c *gin.Context) {
 		HandleError(c, err)
 		return
 	}
-
+	// 回傳成員列表
 	c.JSON(http.StatusOK, gin.H{"members": members})
 }
 
 // 將使用者加入群組聊天室
 func AddGroupMemberHandler(c *gin.Context) {
+	// 取得聊天室ID(網址是/chats/:id/members)
 	chatIDStr := c.Param("id")
 	chatIDUint64, err := strconv.ParseUint(chatIDStr, 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat_id"})
 		return
 	}
-
+	// 取得操作使用者ID(由 middleware 從 JWT 解析)
 	operatorID, err := middleware.UserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -162,6 +160,10 @@ func AddGroupMemberHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
+type CreatePrivateChatRequest struct {
+	TargetUserID uint `json:"target_user_id"`
 }
 
 func CreatePrivateChatHandler(c *gin.Context) {

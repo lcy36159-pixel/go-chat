@@ -2,7 +2,7 @@ package service
 
 import "errors"
 
-// Validation errors — returned when required fields are missing or invalid.
+// 輸入驗證錯誤 - 在執行業務邏輯前就能找出的錯誤
 var (
 	ErrUserIDRequired     = errors.New("user_id is required")
 	ErrChatIDRequired     = errors.New("chat_id is required")
@@ -13,7 +13,7 @@ var (
 	ErrCannotChatWithSelf = errors.New("cannot chat with yourself")
 )
 
-// Auth errors.
+// 登入/註冊相關錯誤
 var (
 	ErrInvalidRegisterInput = errors.New("account, username and password are required")
 	ErrInvalidLoginInput    = errors.New("account and password are required")
@@ -22,7 +22,7 @@ var (
 	ErrInvalidCredentials   = errors.New("invalid account or password")
 )
 
-// Business-rule errors.
+// 業務規則錯誤 - 違反系統規定
 var (
 	ErrNotChatMember    = errors.New("not a chat member")
 	ErrNotGroupChat     = errors.New("chat is not a group")

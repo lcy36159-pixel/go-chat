@@ -139,41 +139,41 @@ func AddGroupMemberHandler(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-
+	// 取得使用者ID(由 request body 傳入)
 	var req domain.AddGroupMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil || req.UserID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
 		return
 	}
-
+	// 執行加入群組邏輯
 	if err := service.AddMemberToGroup(operatorID, uint(chatIDUint64), req.UserID); err != nil {
 		HandleError(c, err)
 		return
 	}
-
+	// 回傳
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
 func CreatePrivateChatHandler(c *gin.Context) {
+	// 取得目標使用者ID(由 request body 傳入)
 	var req domain.CreatePrivateChatRequest
-
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": "invalid request"})
 		return
 	}
-
+	// 取得使用者ID(由 middleware 從 JWT 解析)
 	userID, err := middleware.UserIDFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-
+	// 建立私人聊天室
 	chatID, err := service.CreatePrivateChat(userID, req.TargetUserID)
 	if err != nil {
 		HandleError(c, err)
 		return
 	}
-
+	// 回傳新建立的聊天室ID
 	c.JSON(200, gin.H{
 		"chat_id": chatID,
 	})

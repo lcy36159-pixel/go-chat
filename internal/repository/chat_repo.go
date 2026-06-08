@@ -76,6 +76,16 @@ func FindPrivateChat(user1, user2 uint) (uint, error) {
 
 	return chatID, err
 }
+// GetChatByID returns the chat with the given ID.
+func GetChatByID(chatID uint) (*domain.Chat, error) {
+	var chat domain.Chat
+	err := db.DB.First(&chat, chatID).Error
+	if err != nil {
+		return nil, err
+	}
+	return &chat, nil
+}
+
 func GeneratePrivateKey(user1, user2 uint) string {
 	if user1 < user2 {
 		return fmt.Sprintf("%d_%d", user1, user2)

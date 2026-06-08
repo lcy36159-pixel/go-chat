@@ -1,19 +1,10 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"go-chat/internal/domain"
 	"go-chat/internal/repository"
 	"go-chat/pkg/db"
-)
-
-// Sentinel errors for MarkMessagesRead authorization failures.
-var (
-	ErrNotChatMember    = errors.New("not a chat member")
-	ErrInvalidMessageID = errors.New("invalid message id")
-	ErrNotGroupChat     = errors.New("chat is not a group")
-	ErrAlreadyMember    = errors.New("user is already a member")
 )
 
 //
@@ -26,13 +17,13 @@ var (
 func HandleMessage(msg *domain.Message) error {
 	// 基本驗證
 	if msg.ChatID == 0 {
-		return errors.New("chat_id is required")
+		return ErrChatIDRequired
 	}
 	if msg.SenderID == nil {
-		return errors.New("sender_id is required")
+		return ErrSenderIDRequired
 	}
 	if msg.Content == "" {
-		return errors.New("content is empty")
+		return ErrContentEmpty
 	}
 
 	// 預設 type
@@ -52,7 +43,7 @@ func HandleMessage(msg *domain.Message) error {
 // 建立群組聊天室（完整安全版）
 func CreateGroupChat(creatorID uint, name string, userIDs []uint) (uint, error) {
 	if name == "" {
-		return 0, errors.New("name is required")
+		return 0, ErrNameRequired
 	}
 
 	tx := db.DB.Begin()
@@ -110,13 +101,13 @@ func CreateGroupChat(creatorID uint, name string, userIDs []uint) (uint, error) 
 // updating their unread count cursor.
 func MarkMessagesRead(userID, chatID, lastReadMessageID uint) error {
 	if userID == 0 {
-		return errors.New("user_id is required")
+		return ErrUserIDRequired
 	}
 	if chatID == 0 {
-		return errors.New("chat_id is required")
+		return ErrChatIDRequired
 	}
 	if lastReadMessageID == 0 {
-		return errors.New("last_read_message_id is required")
+		return ErrLastReadIDRequired
 	}
 
 	isMember, err := repository.IsChatMember(userID, chatID)
@@ -151,10 +142,10 @@ func GetUserChats(userID uint) ([]domain.ChatDTO, error) {
 // operatorID must already be a member of the group chat.
 func AddMemberToGroup(operatorID, chatID, targetUserID uint) error {
 	if chatID == 0 {
-		return errors.New("chat_id is required")
+		return ErrChatIDRequired
 	}
 	if targetUserID == 0 {
-		return errors.New("user_id is required")
+		return ErrUserIDRequired
 	}
 
 	// 驗證操作者是群組成員
@@ -211,7 +202,7 @@ func GetGroupMembers(requesterID, chatID uint) ([]domain.MemberInfo, error) {
 
 func CreatePrivateChat(user1 uint, user2 uint) (uint, error) {
 	if user1 == user2 {
-		return 0, errors.New("cannot chat with yourself")
+		return 0, ErrCannotChatWithSelf
 	}
 
 	// 🔍 先檢查是否已存在

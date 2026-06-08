@@ -14,14 +14,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	ErrInvalidRegisterInput = errors.New("account, username and password are required")
-	ErrInvalidLoginInput    = errors.New("account and password are required")
-	ErrWeakPassword         = errors.New("password must be at least 6 characters")
-	ErrAccountTaken         = errors.New("account already exists")
-	ErrInvalidCredentials   = errors.New("invalid account or password")
-)
-
 func Register(account, username, password string) (uint, error) {
 	account = strings.TrimSpace(account)
 	username = strings.TrimSpace(username)

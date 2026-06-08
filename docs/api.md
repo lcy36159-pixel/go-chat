@@ -25,7 +25,7 @@ Base URL: `http://localhost:8080`
 | GET  | `/chats/:id/members` | 取得群組成員列表   |
 | POST | `/chats/:id/members` | 新增群組成員       |
 | POST | `/chats/:id/read` | 標記已讀             |
-| GET  | `/messages`       | 取得聊天訊息（分頁） |
+| GET  | `/chats/:id/messages` | 取得聊天訊息（分頁） |
 | GET  | `/ws`             | WebSocket 即時通訊   |
 
 ---
@@ -407,15 +407,15 @@ Base URL: `http://localhost:8080`
 
 ## 9. 取得聊天訊息（分頁）
 
-**`GET /messages`**
+**`GET /chats/:id/messages`**
 
 取得指定聊天室的訊息，每次最多回傳 20 筆，依 ID 降序（最新在前）。使用 `last_id` 做游標分頁。
 
-### Query 參數
+### Path / Query 參數
 
 | 名稱      | 類型 | 必填 | 說明                                                            |
 | --------- | ---- | ---- | --------------------------------------------------------------- |
-| `chat_id` | uint | ✅    | 聊天室 ID                                                       |
+| `id`      | uint | ✅    | 聊天室 ID（Path Parameter）                                      |
 | `last_id` | uint | ❌    | 上一頁最後一筆訊息的 ID（用於載入更早訊息），預設為 0（取最新） |
 
 ### Response
@@ -461,17 +461,17 @@ Base URL: `http://localhost:8080`
 
 ```
 # 第一頁（最新 20 筆）
-GET /messages?chat_id=10
+GET /chats/10/messages
 
 # 第二頁（取比 ID=36 更早的訊息）
-GET /messages?chat_id=10&last_id=36
+GET /chats/10/messages?last_id=36
 ```
 
 **錯誤**
 
 | HTTP 狀態                   | 說明                            |
 | --------------------------- | ------------------------------- |
-| `400 Bad Request`           | `chat_id` 或 `last_id` 格式錯誤 |
+| `400 Bad Request`           | `id` 或 `last_id` 格式錯誤 |
 | `500 Internal Server Error` | 查詢失敗                        |
 
 ---

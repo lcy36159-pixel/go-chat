@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"go-chat/internal/service"
 	"net/http"
 
@@ -29,17 +28,7 @@ func RegisterHandler(c *gin.Context) {
 	// 執行註冊邏輯
 	userID, err := service.Register(req.Account, req.Username, req.Password)
 	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrInvalidRegisterInput), errors.Is(err, service.ErrWeakPassword):
-			// 帳號、使用者名稱或密碼不合法，回傳400(StatusBadRequest)
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		case errors.Is(err, service.ErrAccountTaken):
-			// 帳號已存在，回傳409(StatusConflict)
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-		default:
-			// 其他錯誤回傳500(StatusInternalServerError)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "registration failed, please try again later"})
-		}
+		HandleError(c, err)
 		return
 	}
 	// 註冊成功回傳201(StatusCreated)和使用者ID
@@ -58,17 +47,7 @@ func LoginHandler(c *gin.Context) {
 	// 執行登入邏輯
 	token, err := service.Login(req.Account, req.Password)
 	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrInvalidLoginInput):
-			// 帳號或密碼為空，回傳400(StatusBadRequest)
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		case errors.Is(err, service.ErrInvalidCredentials):
-			// 帳號或密碼錯誤，回傳401(StatusUnauthorized)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		default:
-			// 其他錯誤回傳500(StatusInternalServerError)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "login failed, please try again later"})
-		}
+		HandleError(c, err)
 		return
 	}
 	// 登入成功回傳200(StatusOK)和JWT token

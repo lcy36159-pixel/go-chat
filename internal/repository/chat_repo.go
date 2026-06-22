@@ -11,11 +11,6 @@ func CreateChat(chat *domain.Chat) error {
 	return db.DB.Create(chat).Error
 }
 
-// 加入成員
-func AddChatMember(member *domain.ChatMember) error {
-	return db.DB.Create(member).Error
-}
-
 // 取得使用者的聊天室列表
 func GetUserChats(userID uint) ([]domain.ChatDTO, error) {
 	var chats []domain.ChatDTO

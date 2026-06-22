@@ -223,14 +223,12 @@ func CreatePrivateChat(user1 uint, user2 uint) (uint, error) {
 	}
 
 	// 加入兩人
-	repository.AddChatMember(&domain.ChatMember{
-		ChatID: chat.ID,
-		UserID: user1,
-	})
-	repository.AddChatMember(&domain.ChatMember{
-		ChatID: chat.ID,
-		UserID: user2,
-	})
+	if err := repository.AddMemberToChat(chat.ID, user1); err != nil {
+		return 0, err
+	}
+	if err := repository.AddMemberToChat(chat.ID, user2); err != nil {
+		return 0, err
+	}
 
 	return chat.ID, nil
 }

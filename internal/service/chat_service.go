@@ -227,6 +227,9 @@ func CreatePrivateChat(user1 uint, user2 uint) (uint, error) {
 		return 0, err
 	}
 	if err := repository.AddMemberToChat(chat.ID, user2); err != nil {
+		if cleanupErr := db.DB.Delete(&domain.Chat{}, chat.ID).Error; cleanupErr != nil {
+			return 0, fmt.Errorf("failed to add second member: %v; cleanup failed: %w", err, cleanupErr)
+		}
 		return 0, err
 	}
 

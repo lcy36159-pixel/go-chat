@@ -224,10 +224,13 @@ func CreatePrivateChat(user1 uint, user2 uint) (uint, error) {
 
 	// 加入兩人
 	if err := repository.AddMemberToChat(chat.ID, user1); err != nil {
+		if cleanupErr := repository.DeleteChat(chat.ID); cleanupErr != nil {
+			return 0, fmt.Errorf("failed to add first member: %v; cleanup failed: %w", err, cleanupErr)
+		}
 		return 0, err
 	}
 	if err := repository.AddMemberToChat(chat.ID, user2); err != nil {
-		if cleanupErr := db.DB.Delete(&domain.Chat{}, chat.ID).Error; cleanupErr != nil {
+		if cleanupErr := repository.DeleteChat(chat.ID); cleanupErr != nil {
 			return 0, fmt.Errorf("failed to add second member: %v; cleanup failed: %w", err, cleanupErr)
 		}
 		return 0, err

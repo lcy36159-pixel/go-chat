@@ -2,8 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"go-chat/internal/domain"
-	"go-chat/internal/repository"
 	"go-chat/internal/service"
 	"go-chat/internal/ws"
 	"go-chat/pkg/jwt"
@@ -53,61 +51,16 @@ func WebSocketHandler(c *gin.Context) {
 			println("ReadMessage error:", err.Error())
 			break
 		}
-		// Debug: 印出收到的訊息
-		// println("收到:", string(msg))
 		// 解析 JSON
 		var incoming IncomingMessage
 		if err := json.Unmarshal(msg, &incoming); err != nil {
 			println("JSON error:", err.Error())
 			continue
 		}
-
-		// ✅ 檢查聊天室成員
-		userIDs, err := repository.GetUserIDsByChatID(incoming.ChatID)
-		if err != nil {
-			println("GetUserIDs error:", err.Error())
+		// 驗證、存檔並廣播
+		if err := service.SendMessage(userID, incoming.ChatID, incoming.Content); err != nil {
+			println("SendMessage error:", err.Error())
 			continue
 		}
-
-		// 檢查是否為成員
-		isMember := false
-		for _, uid := range userIDs {
-			if uid == userID {
-				isMember = true
-				break
-			}
-		}
-		if !isMember {
-			println("Not a member of chat:", incoming.ChatID)
-			continue
-		}
-
-		// ✅ 建立 message
-		message := domain.Message{
-			ChatID:   incoming.ChatID,
-			SenderID: &userID,
-			Type:     "text",
-			Content:  incoming.Content,
-		}
-
-		// ✅ 存 DB
-		if err := service.HandleMessage(&message); err != nil {
-			println("SaveMessage error:", err.Error())
-			continue
-		}
-
-		// ✅ 序列化
-		data, err := json.Marshal(message)
-		if err != nil {
-			println("Marshal error:", err.Error())
-			continue
-		}
-
-		// ✅ 廣播給聊天室所有人
-		for _, uid := range userIDs {
-			ws.SendToUser(uid, data)
-		}
-
-		println("Broadcast success to", len(userIDs), "users")
 	}
 }

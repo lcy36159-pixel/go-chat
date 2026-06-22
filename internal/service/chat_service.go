@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"go-chat/internal/domain"
 	"go-chat/internal/repository"
@@ -222,15 +223,20 @@ func CreatePrivateChat(user1 uint, user2 uint) (uint, error) {
 		return 0, err
 	}
 
+	handleMemberAddFailure := func(stage string, addErr error) (uint, error) {
+		if cleanupErr := repository.DeleteChat(chat.ID); cleanupErr != nil {
+			return 0, fmt.Errorf("%s: %w", stage, errors.Join(addErr, fmt.Errorf("cleanup failed: %w", cleanupErr)))
+		}
+		return 0, fmt.Errorf("%s: %w", stage, addErr)
+	}
+
 	// 加入兩人
-	repository.AddChatMember(&domain.ChatMember{
-		ChatID: chat.ID,
-		UserID: user1,
-	})
-	repository.AddChatMember(&domain.ChatMember{
-		ChatID: chat.ID,
-		UserID: user2,
-	})
+	if err := repository.AddMemberToChat(chat.ID, user1); err != nil {
+		return handleMemberAddFailure("failed to add first member", err)
+	}
+	if err := repository.AddMemberToChat(chat.ID, user2); err != nil {
+		return handleMemberAddFailure("failed to add second member", err)
+	}
 
 	return chat.ID, nil
 }

@@ -11,9 +11,9 @@ func CreateChat(chat *domain.Chat) error {
 	return db.DB.Create(chat).Error
 }
 
-// 加入成員
-func AddChatMember(member *domain.ChatMember) error {
-	return db.DB.Create(member).Error
+// 刪除聊天室
+func DeleteChat(chatID uint) error {
+	return db.DB.Delete(&domain.Chat{}, chatID).Error
 }
 
 // 取得使用者的聊天室列表

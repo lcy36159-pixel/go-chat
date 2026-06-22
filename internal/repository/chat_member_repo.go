@@ -5,6 +5,7 @@ import (
 	"go-chat/pkg/db"
 )
 
+// 取得聊天室成員的 userID 列表
 func GetUserIDsByChatID(chatID uint) ([]uint, error) {
 	var userIDs []uint
 
@@ -16,7 +17,7 @@ func GetUserIDsByChatID(chatID uint) ([]uint, error) {
 	return userIDs, err
 }
 
-// IsChatMember returns true if userID is a member of chatID.
+// 檢查 userID 是否為 chatID 的成員
 func IsChatMember(userID, chatID uint) (bool, error) {
 	var count int64
 	err := db.DB.
@@ -26,7 +27,7 @@ func IsChatMember(userID, chatID uint) (bool, error) {
 	return count > 0, err
 }
 
-// GetGroupMembers returns id and username of every member in the given chat.
+// 取得聊天室成員的 user_id 和 username 列表
 func GetGroupMembers(chatID uint) ([]domain.MemberInfo, error) {
 	var members []domain.MemberInfo
 	err := db.DB.
@@ -38,7 +39,7 @@ func GetGroupMembers(chatID uint) ([]domain.MemberInfo, error) {
 	return members, err
 }
 
-// AddMemberToChat inserts a new member row for the given chat and user.
+// 將使用者加入聊天室
 func AddMemberToChat(chatID, userID uint) error {
 	return db.DB.Create(&domain.ChatMember{ChatID: chatID, UserID: userID}).Error
 }

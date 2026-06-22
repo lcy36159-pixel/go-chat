@@ -19,14 +19,6 @@ func main() {
 
 	db.Init()
 
-	// db.DB.AutoMigrate(
-	// 	&domain.User{},
-	// 	&domain.Chat{},
-	// 	&domain.ChatMember{},
-	// 	&domain.Message{},
-	// 	&domain.MessageRead{},
-	// )
-
 	r := gin.Default()
 	auth := r.Group("/")
 	r.POST("/register", handler.RegisterHandler)

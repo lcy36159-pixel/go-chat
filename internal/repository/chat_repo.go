@@ -16,6 +16,7 @@ func AddChatMember(member *domain.ChatMember) error {
 	return db.DB.Create(member).Error
 }
 
+// 取得使用者的聊天室列表
 func GetUserChats(userID uint) ([]domain.ChatDTO, error) {
 	var chats []domain.ChatDTO
 
@@ -76,6 +77,7 @@ func FindPrivateChat(user1, user2 uint) (uint, error) {
 
 	return chatID, err
 }
+
 // GetChatByID returns the chat with the given ID.
 func GetChatByID(chatID uint) (*domain.Chat, error) {
 	var chat domain.Chat

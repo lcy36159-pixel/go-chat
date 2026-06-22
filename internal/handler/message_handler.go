@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// 取得訊息功能
 func GetMessagesHandler(c *gin.Context) {
 	// 從 URL 參數取得 chatID
 	chatIDStr := c.Param("id")

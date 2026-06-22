@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// HandleError maps known service sentinel errors to appropriate HTTP responses.
-// Unknown errors return HTTP 500 with a generic message.
+// HandleError 將已知的錯誤對應到對應的 HTTP 回應。
+// 未知的錯誤會回傳 HTTP 500 和一個通用訊息。
 func HandleError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, service.ErrNotChatMember):

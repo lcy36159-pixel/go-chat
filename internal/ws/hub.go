@@ -7,7 +7,7 @@ func Register(client *Client) {
 	clients[client.UserID] = client
 }
 
-// 傳送訊息給指定 user
+// 傳送訊息給指定 user (如果在線上)
 func SendToUser(userID uint, data []byte) {
 	if client, ok := clients[userID]; ok {
 		client.Conn.WriteMessage(1, data)
